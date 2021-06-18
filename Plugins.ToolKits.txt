@@ -1,0 +1,8 @@
+Simple general purpose package
+	1. Simple event repository
+	2. Simple MVVM binding, Messenger, command
+	3. Simple  Attribute、Collection、Reflection Extends
+	4. Simple Ioc Container
+	5. Simple EasyUdp
+	6. Simple EasyTcp
+	7. Simple EasyTimer

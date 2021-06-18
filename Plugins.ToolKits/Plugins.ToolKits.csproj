@@ -1,0 +1,88 @@
+<Project Sdk="MSBuild.Sdk.Extras/3.0.23">
+<!--<Project Sdk="Microsoft.NET.Sdk">-->
+
+	<PropertyGroup>
+		<Authors>Hy</Authors>
+		<Description>Simple general purpose package
+1. Simple event repository
+2. Simple MVVM binding, Messenger, Command,Validate,Checker
+3. Simple  Attribute、Collection、Reflection Extends
+4. Simple Ioc Container
+5. Simple EasyUdp
+6. Simple EasyTcp
+7. Simple EasyTimer
+8. Simple RESTful</Description>
+		<Version>1.7.5.6</Version>
+		<AssemblyVersion>1.7.5.6</AssemblyVersion>
+		<FileVersion>1.7.5.6</FileVersion>
+		<Language>9.0</Language>
+		<PackageLicenseFile>Plugins.ToolKits.txt</PackageLicenseFile>
+		<Company>Hy</Company>
+		<Product>Hy</Product>
+		<PackageReleaseNotes>Simple general purpose package
+1. Simple event repository
+2. Simple MVVM binding, Messenger, Command,Validate,Checker
+3. Simple  Attribute、Collection、Reflection Extends
+4. Simple Ioc Container
+5. Simple EasyUdp
+6. Simple EasyTcp
+7. Simple EasyTimer
+8. Simple RESTful</PackageReleaseNotes>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>Plugins.SNK.pfx</AssemblyOriginatorKeyFile>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<PackageProjectUrl>https://github.com/ismyhy/Plugins.ToolKits</PackageProjectUrl>
+		<PackageIcon>plugin.png</PackageIcon>
+
+		<OutputPath>../bin/$(Platform)/$(Configuration)</OutputPath>
+
+		<Authors>Hy.</Authors>
+		<Product>Hy.</Product>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+	</PropertyGroup>
+	<Import Project="$(SolutionDir)\GlobalCompileSettings.Targets" />
+ 
+ 
+
+	<ItemGroup>
+		<None Include="..\Plugins.ToolKits.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None> 
+		<None Include="plugin.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>
+			net45 ;
+			net452 ;
+			net451 ;
+			net46 ;
+			net461 ;
+			net462 ;
+			net472 ;
+			net47 ;
+			net471 ;
+			net48 ;
+			netcoreapp3.0 ;
+			netcoreapp3.1 ;
+			net5.0 ; 
+			netstandard2.0;
+			netstandard2.1;
+		<!--	-->
+		</TargetFrameworks>
+		<UserSecretsId>caf78a21-ee97-4204-a03e-6904241ce800</UserSecretsId>
+		<NeutralLanguage></NeutralLanguage>
+
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+	  <DocumentationFile></DocumentationFile>
+	</PropertyGroup>
+
+
+</Project>

@@ -1,0 +1,71 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <Platforms>AnyCPU</Platforms>
+    <!--AnyCPU;x64;-->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+
+  <!--<PropertyGroup>
+    <TargetFrameworks> 
+      net45;
+      net452;
+      net451; 
+      net46;
+      net461; 
+      net462;
+      net472;  
+      net47;  
+      net471;
+      net48;
+      netcoreapp3.0;
+      netcoreapp3.1;
+      netcoreapp5.0;
+      netstandard2.0;
+      netstandard2.1;
+    </TargetFrameworks>
+  </PropertyGroup>-->
+
+
+  <PropertyGroup>
+    <OutputPath>../bin/$(Platform)/$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+
+    <Authors>Hy.</Authors>
+    <Product>Hy.</Product>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+  </PropertyGroup>
+
+  <!--使用方式-->
+  <!--把需要同步生成路径的项目卸载，编辑项目文件，在项目文件底部添加下面代码段-->
+  <!--<Import Project="$(SolutionDir)\GlobalCompileSettings.Targets" />-->
+
+
+  <!--
+    <TargetFrameworks>
+      netcoreapp3.1;
+      netcoreapp3.0;
+      net461;
+      net472;
+      net48;
+      netstandard2.0;
+      netstandard2.1;
+      netcoreapp5.0; 
+      monoandroid9.0;
+      monoandroid10.0;
+      xamarin.ios10;
+      tizen40;
+      xamarin.mac20;
+      xamarin.tvos10; 
+  </TargetFrameworks>-->
+</Project>
