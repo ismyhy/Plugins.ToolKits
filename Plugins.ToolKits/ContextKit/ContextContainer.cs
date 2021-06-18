@@ -1,6 +1,4 @@
-﻿using Plugins.ToolKits.Attributes;
-using Plugins.ToolKits.Extensions;
-
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.ContextKit
+namespace Plugins.ToolKits
 {
     public class ContextContainer : DynamicObject, IContextContainer
     {

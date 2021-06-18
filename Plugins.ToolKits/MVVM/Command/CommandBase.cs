@@ -5,17 +5,17 @@ namespace Plugins.ToolKits.MVVM
 {
     public abstract class CommandBase : ICommand
     {
-        protected internal Func<bool> CanExecuteFunc;
-        protected internal Action<Exception> CatchCallback;
+        internal Func<bool> canExecuteFunc;
+        internal Action<Exception> catchCallback;
 
-        protected bool isRunning;
+        protected bool IsCommandExecuting;
         public abstract void Execute(object parameter);
 
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
         {
-            return CanExecuteFunc?.Invoke() ?? true;
+            return canExecuteFunc?.Invoke() ?? true;
         }
 
         //public void NotifyCanExecuteChanged()

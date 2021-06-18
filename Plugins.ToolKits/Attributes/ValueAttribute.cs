@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Plugins.ToolKits.Attributes
+namespace Plugins.ToolKits
 {
     /// <summary>
     /// Value tag

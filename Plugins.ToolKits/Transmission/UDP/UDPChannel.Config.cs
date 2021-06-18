@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using UdpClient = Plugins.ToolKits.Transmission.UdpClient;
 namespace Plugins.ToolKits.Transmission
 {
     internal class UDPChannelKeys
@@ -12,9 +10,9 @@ namespace Plugins.ToolKits.Transmission
         public const string ReceiveFunc = "ReceiveFunc";
         public const string UdpClient = "UdpClient";
         public const string AsynchronousExecutionCallback = "AsynchronousExecutionCallback";
-        public const string Semaphore= "Semaphore";
+        public const string Semaphore = "Semaphore";
         public const string UDPChannel = "UDPChannel";
-        public const string JoinMulticastGroup= "JoinMulticastGroup";
+        public const string JoinMulticastGroup = "JoinMulticastGroup";
     }
 
     public partial class UDPChannel
@@ -50,10 +48,10 @@ namespace Plugins.ToolKits.Transmission
 
         public IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress)
         {
-            if(!Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup,out var list))
+            if (!Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list))
             {
-                Context.Set(nameof(UdpClient.JoinMulticastGroup), list=new List<IPAddress>());
-            } 
+                Context.Set(nameof(UdpClient.JoinMulticastGroup), list = new List<IPAddress>());
+            }
             list.Add(iPAddress);
             return this;
         }

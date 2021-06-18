@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits.Extensions;
-using Plugins.ToolKits.MVVM;
+﻿using Plugins.ToolKits.MVVM;
 
 using System;
 using System.Linq.Expressions;

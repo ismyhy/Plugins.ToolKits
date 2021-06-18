@@ -1,10 +1,9 @@
-﻿using Plugins.ToolKits.Attributes;
-
+﻿
 using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Plugins.ToolKits.Extensions
+namespace Plugins.ToolKits
 {
     public static partial class AttributeExtensions
     {

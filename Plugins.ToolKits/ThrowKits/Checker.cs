@@ -1,13 +1,11 @@
-﻿using Plugins.ToolKits.Attributes;
-using Plugins.ToolKits.Extensions;
-
+﻿
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace Plugins.ToolKits.ThrowKits
+namespace Plugins.ToolKits
 {
     public static partial class Checker
     {

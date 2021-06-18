@@ -16,14 +16,14 @@ namespace Plugins.ToolKits.Transmission
         private static int CommandCounter = 0;
 
         internal bool UsingRemoteEndPoint = false;
-         
+
         public ProtocolPacket()
         {
 
         }
-         
+
         internal bool IsCompress;
-        internal int Counter; 
+        internal int Counter;
         internal bool ReportArrived = true;
         internal int PacketLength;
         internal byte[] Data;
@@ -32,14 +32,14 @@ namespace Plugins.ToolKits.Transmission
         public void Dispose()
         {
             IsCompress = false;
-            Data=null;  
+            Data = null;
             Offset = 0;
             PacketLength = 0;
             ReportArrived = false;
-            Counter= 0;
+            Counter = 0;
             DataLength = 0;
         }
-         
+
         public byte[] ToBuffer()
         {
 
@@ -61,10 +61,10 @@ namespace Plugins.ToolKits.Transmission
             using BinaryWriter write = new BinaryWriter(stream);
 
             write.Write(PacketLength);
-            write.Write(Counter); 
+            write.Write(Counter);
             write.Write(IsCompress ? (byte)1 : (byte)0);
             write.Write(ReportArrived ? (byte)1 : (byte)0);
-         
+
             write.Write(dataTemp, offset, dataLength);
             return stream.ToArray();
         }
@@ -89,10 +89,10 @@ namespace Plugins.ToolKits.Transmission
             using BinaryReader reader = new BinaryReader(stream);
 
             protocol.PacketLength = reader.ReadInt32();
-            protocol.Counter = reader.ReadInt32(); 
+            protocol.Counter = reader.ReadInt32();
             protocol.IsCompress = reader.ReadByte() == 1;
             protocol.ReportArrived = reader.ReadByte() == 1;
-            
+
             int effectiveDataLength = protocol.PacketLength - TotalHeaderLength;
             if (effectiveDataLength > 0)
             {

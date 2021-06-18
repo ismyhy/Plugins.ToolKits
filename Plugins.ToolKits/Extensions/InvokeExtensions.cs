@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.Extensions
+namespace Plugins.ToolKits
 {
     public static class Invoker
     {

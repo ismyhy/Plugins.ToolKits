@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits.Extensions;
-using Plugins.ToolKits.MVVM;
+﻿using Plugins.ToolKits.MVVM;
 
 using System;
 using System.Collections.Concurrent;
@@ -13,26 +12,26 @@ namespace Plugins.ToolKits.Validatement
 {
     internal partial class Validator : IValidate
     {
-        private readonly ValidatableViewModelBase _owner;
+        private readonly ValidatableViewModelBase owner;
 
-        private readonly Type _ownerType;
+        private readonly Type ownerType;
 
-        private readonly IDictionary<PropertyInfo, List<string>> _validateResult =
+        private readonly IDictionary<PropertyInfo, List<string>> validateResult =
             new ConcurrentDictionary<PropertyInfo, List<string>>();
 
         internal Validator(ValidatableViewModelBase validateOwner)
         {
-            _owner = validateOwner;
-            _ownerType = validateOwner.GetType();
+            owner = validateOwner;
+            ownerType = validateOwner.GetType();
         }
 
-        public bool HasErrors => _validateResult.Count > 0;
+        public bool HasErrors => validateResult.Count > 0;
 
 
         public void Validate()
         {
-            _validateResult.ForEach(i => i.Value?.Clear());
-            _validateResult.Clear();
+            validateResult.ForEach(i => i.Value?.Clear());
+            validateResult.Clear();
 
             _validateResultAction.ForEach(i =>
             {
@@ -62,14 +61,14 @@ namespace Plugins.ToolKits.Validatement
 
         public void Validate(string propertyName, bool clearOld = true)
         {
-            PropertyInfo propertyInfo = _ownerType.GetProperty(propertyName);
+            PropertyInfo propertyInfo = ownerType.GetProperty(propertyName);
 
             if (propertyInfo is null)
             {
-                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{_ownerType}");
+                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{ownerType}");
             }
 
-            if (clearOld && _validateResult.TryGetValue(propertyInfo, out List<string> reList))
+            if (clearOld && validateResult.TryGetValue(propertyInfo, out List<string> reList))
             {
                 reList?.Clear();
             }
@@ -84,7 +83,7 @@ namespace Plugins.ToolKits.Validatement
         public IErrorCollection GetErrors()
         {
 
-            Dictionary<string, List<string>> dict = _validateResult.GroupBy(i =>
+            Dictionary<string, List<string>> dict = validateResult.GroupBy(i =>
             {
                 DisplayNameAttribute dis = i.Key.GetAttribute<DisplayNameAttribute>();
                 return dis is null ? i.Key.Name : dis.DisplayName;
@@ -111,14 +110,14 @@ namespace Plugins.ToolKits.Validatement
                 throw new ArgumentNullException(nameof(propertyName));
             }
 
-            PropertyInfo propertyInfo = _validateResult.Keys.FirstOrDefault(i => i.Name == propertyName);
+            PropertyInfo propertyInfo = validateResult.Keys.FirstOrDefault(i => i.Name == propertyName);
             if (propertyInfo is null)
             {
                 return new List<string>();
                 // throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{_owner.GetType()}");
             }
 
-            return _validateResult[propertyInfo];
+            return validateResult[propertyInfo];
         }
 
         public void Required<TReturnType>(Expression<Func<TReturnType>> expression, string validateErrorMessage = null)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Plugins.ToolKits.Extensions
+namespace Plugins.ToolKits
 {
     public static partial class MathExtensions
     {

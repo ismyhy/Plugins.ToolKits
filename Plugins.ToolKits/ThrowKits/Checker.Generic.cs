@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace Plugins.ToolKits.ThrowKits
+namespace Plugins.ToolKits
 {
     public static partial class Checker
     {

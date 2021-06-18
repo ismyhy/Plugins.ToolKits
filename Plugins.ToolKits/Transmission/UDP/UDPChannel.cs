@@ -1,6 +1,4 @@
-﻿using Plugins.ToolKits.ContextKit;
-using Plugins.ToolKits.Extensions;
-
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -95,10 +93,10 @@ namespace Plugins.ToolKits.Transmission
 
             Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
             Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<IUDPSession, byte[]> receiveFunc);
-            Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out var list);
+            Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list);
 
             list?.ForEach(x => udpClient.JoinMulticastGroup(x));
-             
+
             IsRunning = true;
 
             udpClient.BeginReceive(ReceiveCallback, udpClient);
@@ -107,20 +105,20 @@ namespace Plugins.ToolKits.Transmission
 
             void ReceiveCallback(IAsyncResult iar)
             {
-                if ( iar.AsyncState is not UdpClient udpClient  || ! IsRunning)
+                if (iar.AsyncState is not UdpClient udpClient || !IsRunning)
                 {
                     return;
                 }
-                 
+
                 if (iar.IsCompleted)
                 {
                     IPEndPoint receivedEndPoint = null;
 
-                    var receiveBytes = udpClient.EndReceive(iar, ref receivedEndPoint);
+                    byte[] receiveBytes = udpClient.EndReceive(iar, ref receivedEndPoint);
 
-                    var protocol = ProtocolPacket.FromBuffer(receiveBytes, 0, receiveBytes.Length);
+                    ProtocolPacket protocol = ProtocolPacket.FromBuffer(receiveBytes, 0, receiveBytes.Length);
 
-                    var dataBuffer = protocol.Data;
+                    byte[] dataBuffer = protocol.Data;
                     if (protocol.ReportArrived)
                     {
                         Task.Factory.StartNew(() =>
@@ -145,8 +143,8 @@ namespace Plugins.ToolKits.Transmission
                         return;
                     }
 
-                    var key = receivedEndPoint.Address.GetHashCode() ^ receivedEndPoint.Port;
-                    var session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
+                    int key = receivedEndPoint.Address.GetHashCode() ^ receivedEndPoint.Port;
+                    IUDPSession session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
                     {
                         RemoteEndPoint = receivedEndPoint
                     });

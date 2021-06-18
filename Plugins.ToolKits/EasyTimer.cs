@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits.Attributes;
-
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,19 +8,19 @@ namespace Plugins.ToolKits
 {
     public sealed class EasyTimer : IDisposable
     {
-        private static readonly IDictionary<object, EasyTimer> TimerLongs =
+        private static readonly IDictionary<object, EasyTimer> timerLongs =
             new ConcurrentDictionary<object, EasyTimer>();
 
-        private readonly Stopwatch _stopwatch;
+        private readonly Stopwatch stopwatch;
 
         public EasyTimer([NotNull] object token)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
             NowTimer = DateTime.Now;
-            _stopwatch = Stopwatch.StartNew();
+            stopwatch = Stopwatch.StartNew();
         }
 
-        public bool IsRunning => _stopwatch.IsRunning;
+        public bool IsRunning => stopwatch.IsRunning;
 
 
         public object Token { get; }
@@ -38,7 +37,7 @@ namespace Plugins.ToolKits
         {
             if (IsRunning)
             {
-                _stopwatch.Stop();
+                stopwatch.Stop();
             }
         }
 
@@ -46,35 +45,35 @@ namespace Plugins.ToolKits
         {
             if (IsRunning)
             {
-                _stopwatch.Stop();
+                stopwatch.Stop();
             }
 
-            return _stopwatch.Elapsed;
+            return stopwatch.Elapsed;
         }
 
         public long GetTotalMilliseconds()
         {
             if (IsRunning)
             {
-                _stopwatch.Stop();
+                stopwatch.Stop();
             }
 
-            return _stopwatch.ElapsedMilliseconds;
+            return stopwatch.ElapsedMilliseconds;
         }
 
         public long GetTotalTicks()
         {
             if (IsRunning)
             {
-                _stopwatch.Stop();
+                stopwatch.Stop();
             }
 
-            return _stopwatch.ElapsedTicks;
+            return stopwatch.ElapsedTicks;
         }
 
         public override string ToString()
         {
-            return $"Elapsed Time:{_stopwatch.ElapsedMilliseconds} ms";
+            return $"Elapsed Time:{stopwatch.ElapsedMilliseconds} ms";
         }
 
         public static EasyTimer StartNew()
@@ -90,7 +89,7 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            TimerLongs[token] = new EasyTimer(token);
+            timerLongs[token] = new EasyTimer(token);
         }
 
         public static TimeSpan GetTimeSpan([NotNull] object token, bool removeTokenAfterRead = true)
@@ -100,14 +99,14 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            if (!TimerLongs.TryGetValue(token, out EasyTimer timer))
+            if (!timerLongs.TryGetValue(token, out EasyTimer timer))
             {
                 throw new NotSupportedException($"Token:{token} not set ");
             }
 
             if (removeTokenAfterRead)
             {
-                TimerLongs.Remove(token);
+                timerLongs.Remove(token);
             }
 
             return timer.GetTimeSpan();
@@ -120,14 +119,14 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            if (!TimerLongs.TryGetValue(token, out EasyTimer timer))
+            if (!timerLongs.TryGetValue(token, out EasyTimer timer))
             {
                 throw new NotSupportedException($"Token:{token} not set ");
             }
 
             if (removeTokenAfterRead)
             {
-                TimerLongs.Remove(token);
+                timerLongs.Remove(token);
             }
 
             return timer.GetTotalMilliseconds();
@@ -147,7 +146,7 @@ namespace Plugins.ToolKits
             }
             finally
             {
-                timer._stopwatch.Stop();
+                timer.stopwatch.Stop();
             }
 
             return timer;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-using UdpClient = Plugins.ToolKits.Transmission.UdpClient;
 namespace Plugins.ToolKits.Transmission
 {
 
@@ -19,7 +18,7 @@ namespace Plugins.ToolKits.Transmission
         IUDPConfig UseEnableBroadcast(bool enableBroadcast);
         IUDPConfig UseTtl(short ttl);
         IUDPConfig UseDontFragment(bool dontFragment);
-        IUDPConfig UseMulticastLoopback(bool multicastLoopback); 
+        IUDPConfig UseMulticastLoopback(bool multicastLoopback);
         IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress);
         IUDPConfig UseAsynchronousExecutionCallback(bool asynchronousExecutionCallback);
         IUDPConfig UseLocalIPEndPoint(IPAddress localIp, int localPort);
@@ -28,9 +27,9 @@ namespace Plugins.ToolKits.Transmission
         IUDPBuilder Build();
     }
 
-    public interface IUDPChannel :  IDisposable
-    {  
-        Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting=null);
+    public interface IUDPChannel : IDisposable
+    {
+        Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null);
 
         int Send(byte[] buffer, int offset, int length, PacketSetting setting = null);
 

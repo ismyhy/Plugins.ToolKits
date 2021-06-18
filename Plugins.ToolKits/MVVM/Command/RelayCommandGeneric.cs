@@ -4,21 +4,23 @@ namespace Plugins.ToolKits.MVVM
 {
     public sealed class RelayCommand<TParameter> : CommandBase
     {
-        private readonly Action<TParameter> ExecuteAction;
-        private readonly Action<IExclusiveContext<TParameter>> ExecuteExclusiveAction;
+        private readonly Action<TParameter> executeAction;
+        private readonly Action<IExclusiveContext<TParameter>> executeExclusiveAction;
         public RelayCommand(Action<TParameter> executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
         {
-            ExecuteAction = executeAction;
-            CanExecuteFunc = canExecuteFunc;
-            CatchCallback = catchCallback;
+            this.executeAction = executeAction;
+            base.canExecuteFunc = canExecuteFunc;
+            base.catchCallback = catchCallback;
         }
 
 
         public RelayCommand(Action<IExclusiveContext<TParameter>> executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
+
         {
-            ExecuteExclusiveAction = executeAction;
-            CanExecuteFunc = canExecuteFunc;
-            CatchCallback = catchCallback;
+            executeExclusiveAction = executeAction;
+            base.canExecuteFunc = canExecuteFunc;
+            base.catchCallback = catchCallback;
+
         }
 
 
@@ -29,13 +31,15 @@ namespace Plugins.ToolKits.MVVM
             ExecuteExclusiveActionRun(parameter);
 
         }
+
+
         private void ExecuteExclusiveActionRun(object parameter)
         {
-            if (ExecuteExclusiveAction is null)
+            if (executeExclusiveAction is null)
             {
                 return;
             }
-            if (isRunning)
+            if (IsCommandExecuting)
             {
                 return;
             }
@@ -44,54 +48,56 @@ namespace Plugins.ToolKits.MVVM
             {
                 return;
             }
-            ExclusiveContext<TParameter> context = new ExclusiveContext<TParameter>(() => isRunning = true, () => isRunning = false)
+
+            ExclusiveContext<TParameter> context = new ExclusiveContext<TParameter>(() => IsCommandExecuting = true, () => IsCommandExecuting = false)
             {
                 Parameter = t
             };
+
             try
             {
-                ExecuteExclusiveAction(context);
+                executeExclusiveAction(context);
             }
             catch (Exception e)
             {
-                if (CatchCallback is null)
+                if (catchCallback is null)
                 {
                     throw;
                 }
-                CatchCallback?.Invoke(e);
+                catchCallback?.Invoke(e);
             }
         }
 
         private void ExecuteActionRun(object parameter)
         {
-            if (ExecuteAction is null)
+            if (executeAction is null)
             {
                 return;
             }
             try
             {
-                if (isRunning)
+                if (IsCommandExecuting)
                 {
                     return;
                 }
-                isRunning = true;
+                IsCommandExecuting = true;
 
                 if (parameter is TParameter target)
                 {
-                    ExecuteAction(target);
+                    executeAction(target);
                 }
             }
             catch (Exception e)
             {
-                if (CatchCallback is null)
+                if (catchCallback is null)
                 {
                     throw;
                 }
-                CatchCallback?.Invoke(e);
+                catchCallback?.Invoke(e);
             }
             finally
             {
-                isRunning = false;
+                IsCommandExecuting = false;
             }
         }
     }

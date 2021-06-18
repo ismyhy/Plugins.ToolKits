@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace Plugins.ToolKits.EncryptExtensions
+namespace Plugins.ToolKits
 {
     public interface IRSAProvider
     {

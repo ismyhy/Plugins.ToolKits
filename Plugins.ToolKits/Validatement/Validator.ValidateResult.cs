@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits.Extensions;
-
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,16 +39,16 @@ namespace Plugins.ToolKits.Validatement
                 throw new ArgumentNullException(nameof(validateErrorMessage));
             }
 
-            PropertyInfo propertyInfo = _ownerType.GetProperty(propertyName);
+            PropertyInfo propertyInfo = ownerType.GetProperty(propertyName);
 
             if (propertyInfo is null)
             {
-                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{_ownerType}");
+                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{ownerType}");
             }
 
             InnerResultRegister(propertyInfo, validateErrorMessage, () =>
             {
-                TReturnType value = (TReturnType)propertyInfo.GetValue(_owner);
+                TReturnType value = (TReturnType)propertyInfo.GetValue(owner);
                 ValidateResult result = validatorFunc(value);
                 return result;
             });
@@ -85,11 +84,11 @@ namespace Plugins.ToolKits.Validatement
                 throw new ArgumentNullException(nameof(validateErrorMessage));
             }
 
-            PropertyInfo propertyInfo = _ownerType.GetProperty(propertyName);
+            PropertyInfo propertyInfo = ownerType.GetProperty(propertyName);
 
             if (propertyInfo is null)
             {
-                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{_ownerType}");
+                throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{ownerType}");
             }
 
             InnerResultRegister(propertyInfo, validateErrorMessage, validatorFunc);
@@ -111,9 +110,9 @@ namespace Plugins.ToolKits.Validatement
 
                 if (result == ValidateResult.Invalid)
                 {
-                    if (!_validateResult.TryGetValue(propertyInfo, out List<string> errors))
+                    if (!validateResult.TryGetValue(propertyInfo, out List<string> errors))
                     {
-                        _validateResult[propertyInfo] = errors = new List<string>();
+                        validateResult[propertyInfo] = errors = new List<string>();
                     }
 
                     errors.Add(validateErrorMessage);

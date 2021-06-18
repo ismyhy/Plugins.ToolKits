@@ -55,6 +55,12 @@
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
+ 
+ 
+
+	<ItemGroup>
+	  <Folder Include="Commom\" />
+	</ItemGroup>
 
 	<PropertyGroup>
 		<TargetFrameworks>
@@ -75,6 +81,7 @@
 		</TargetFrameworks>
 		<UserSecretsId>caf78a21-ee97-4204-a03e-6904241ce800</UserSecretsId>
 		<NeutralLanguage></NeutralLanguage>
+		<ApplicationIcon>plugin.ico</ApplicationIcon>
 
 	</PropertyGroup>
 

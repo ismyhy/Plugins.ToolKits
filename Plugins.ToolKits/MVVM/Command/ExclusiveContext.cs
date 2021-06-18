@@ -3,15 +3,13 @@
 namespace Plugins.ToolKits.MVVM
 {
 
-    public interface IEndExclusiveContext : IDisposable
+
+
+    public interface IExclusiveContext : IDisposable
     {
+        IExclusiveContext BeginExclusive();
+
         void EndExclusive();
-    }
-
-
-    public interface IExclusiveContext : IEndExclusiveContext
-    {
-        IEndExclusiveContext BeginExclusive();
     }
     public interface IExclusiveContext<TParameter> : IExclusiveContext
     {
@@ -30,18 +28,21 @@ namespace Plugins.ToolKits.MVVM
     }
 
 
-    internal class ExclusiveContext : IExclusiveContext, IEndExclusiveContext
+    internal class ExclusiveContext : IExclusiveContext
     {
         private readonly Action EndExecuteCallback;
         private readonly Action BeginExecuteCallback;
+        private bool ExclisiveLockRunning;
         internal ExclusiveContext(Action beginAction, Action endAction)
         {
             BeginExecuteCallback = beginAction;
             EndExecuteCallback = endAction;
         }
 
-        public IEndExclusiveContext BeginExclusive()
+        public IExclusiveContext BeginExclusive()
         {
+            ExclisiveLockRunning = true;
+
             BeginExecuteCallback.Invoke();
             return this;
         }
@@ -49,13 +50,17 @@ namespace Plugins.ToolKits.MVVM
 
         public void EndExclusive()
         {
+            if (ExclisiveLockRunning == false)
+            {
+                throw new Exception("exclusive lock execution has not yet started");
+            }
             EndExecuteCallback.Invoke();
         }
 
 
         public void Dispose()
         {
-            EndExclusive();
+            EndExecuteCallback.Invoke();
         }
 
     }

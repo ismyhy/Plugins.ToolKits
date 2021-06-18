@@ -1,6 +1,4 @@
-﻿using Plugins.ToolKits.ContextKit;
-using Plugins.ToolKits.Extensions;
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,7 +86,7 @@ namespace Plugins.ToolKits.EasyHttp
 
             string stringBuffer = Context.Get<Encoding>(EasyHttpKeys.Encoding).GetString(buffer);
 
-            var Deserializer = Context.Get<Func<string, Type, object>>(EasyHttpKeys.Deserializer);
+            Func<string, Type, object> Deserializer = Context.Get<Func<string, Type, object>>(EasyHttpKeys.Deserializer);
 
             try
             {
@@ -102,8 +100,8 @@ namespace Plugins.ToolKits.EasyHttp
                 return default;
             }
             catch (Exception excep)
-            { 
-                throw new Exception("An exception occurred during deserialization" , excep);
+            {
+                throw new Exception("An exception occurred during deserialization", excep);
             }
 
         }
@@ -119,7 +117,7 @@ namespace Plugins.ToolKits.EasyHttp
 
 
         #region CreateResult 
-        internal readonly ContextContainer Context=new ContextContainer();
+        internal readonly ContextContainer Context = new ContextContainer();
 
         internal void SuccessResponse(HttpWebResponse response)
         {

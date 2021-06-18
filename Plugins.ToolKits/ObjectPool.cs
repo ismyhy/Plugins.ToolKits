@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits.ContextKit;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -23,11 +22,11 @@ namespace Plugins.ToolKits
             return new ObjectPool<Target>(maxCount, createFunc);
         }
 
-        public static ObjectPool<Target> Share<Target>(int maxCount ) where Target : class, IResettable,new()
-        { 
-            return new ObjectPool<Target>(maxCount,  ()=>new Target());
+        public static ObjectPool<Target> Share<Target>(int maxCount) where Target : class, IResettable, new()
+        {
+            return new ObjectPool<Target>(maxCount, () => new Target());
         }
-         
+
     }
 
     internal static class ObjectPoolKeys
@@ -40,31 +39,31 @@ namespace Plugins.ToolKits
     }
 
 
-    public class ObjectPool<TType> where TType : class, IResettable 
+    public class ObjectPool<TType> where TType : class, IResettable
     {
-        private ContextContainer container=new ContextContainer();
-         
+        private readonly ContextContainer container = new ContextContainer();
+
         internal ObjectPool(int maxCount, Func<TType> createFunc)
         {
             container.Set(ObjectPoolKeys.CreateFunc, createFunc);
-            container.Set(ObjectPoolKeys.ConcurrentDictionary, new ConcurrentDictionary<int, TType>()); 
-            container.Set(ObjectPoolKeys.ConcurrentQueue, new ConcurrentQueue<TType>()); 
-            container.Set(ObjectPoolKeys.Semaphore, new Semaphore(1, 1)); 
+            container.Set(ObjectPoolKeys.ConcurrentDictionary, new ConcurrentDictionary<int, TType>());
+            container.Set(ObjectPoolKeys.ConcurrentQueue, new ConcurrentQueue<TType>());
+            container.Set(ObjectPoolKeys.Semaphore, new Semaphore(1, 1));
             container.Set(ObjectPoolKeys.AutoResetEvent, new AutoResetEvent(false));
-             
+
             MaxCount = maxCount;
         }
         public int MaxCount { get; private set; }
-         
-        public TType Rent(int millisecondsTimeout=-1)
+
+        public TType Rent(int millisecondsTimeout = -1)
         {
 
-            var createFunc=container.Get<Func<TType>>(ObjectPoolKeys.CreateFunc);
-            var dict=container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary );
-            var queue=container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue );
-            var Semaphore=container.Get<Semaphore>(ObjectPoolKeys.Semaphore );
-            var autoReset=container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent );
-             
+            Func<TType> createFunc = container.Get<Func<TType>>(ObjectPoolKeys.CreateFunc);
+            ConcurrentDictionary<int, TType> dict = container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary);
+            ConcurrentQueue<TType> queue = container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue);
+            Semaphore Semaphore = container.Get<Semaphore>(ObjectPoolKeys.Semaphore);
+            AutoResetEvent autoReset = container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent);
+
             try
             {
                 if (!Semaphore.WaitOne(millisecondsTimeout))
@@ -74,12 +73,12 @@ namespace Plugins.ToolKits
 
                 do
                 {
-                    if (queue.TryDequeue(out var value))
+                    if (queue.TryDequeue(out TType value))
                     {
                         return value;
                     }
 
-                    var totalCount = queue.Count + dict.Count;
+                    int totalCount = queue.Count + dict.Count;
                     if (totalCount < MaxCount)
                     {
                         value = createFunc();
@@ -90,30 +89,30 @@ namespace Plugins.ToolKits
                     {
                         throw new TimeoutException();
                     }
-                } while (true); 
+                } while (true);
             }
             finally
             {
                 Semaphore.Release(1);
-            } 
+            }
         }
 
 
-        public void Return(TType target,bool needReset=true)
+        public void Return(TType target, bool needReset = true)
         {
-            if(target == null)
+            if (target == null)
             {
                 throw new ArgumentNullException(nameof(target));
-            } 
+            }
             if (needReset)
             {
                 target.Reset();
             }
-            var dict = container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary);
-            var queue = container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue); 
-            var autoReset = container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent); 
+            ConcurrentDictionary<int, TType> dict = container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary);
+            ConcurrentQueue<TType> queue = container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue);
+            AutoResetEvent autoReset = container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent);
             queue.Enqueue(target);
-            dict.TryRemove(target.GetHashCode(),out var _); 
+            dict.TryRemove(target.GetHashCode(), out TType _);
             autoReset.Set();
         }
 

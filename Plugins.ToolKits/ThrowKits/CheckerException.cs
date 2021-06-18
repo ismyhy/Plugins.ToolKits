@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Plugins.ToolKits.ThrowKits
+namespace Plugins.ToolKits
 {
     public class CheckerException : Exception
     {

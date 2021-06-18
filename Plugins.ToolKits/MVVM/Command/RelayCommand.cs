@@ -7,21 +7,21 @@ namespace Plugins.ToolKits.MVVM
 {
     public sealed class RelayCommand : CommandBase
     {
-        private readonly Action ExecuteAction;
-        private readonly Action<ExclusiveContext> ExecuteExclusiveAction;
+        private readonly Action executeAction;
+        private readonly Action<IExclusiveContext> executeExclusiveAction;
         public RelayCommand(Action executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
         {
-            ExecuteAction = executeAction;
-            CanExecuteFunc = canExecuteFunc;
-            CatchCallback = catchCallback;
+            this.executeAction = executeAction;
+            base.canExecuteFunc = canExecuteFunc;
+            base.catchCallback = catchCallback;
         }
 
 
         public RelayCommand(Action<IExclusiveContext> executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
         {
-            ExecuteExclusiveAction = executeAction;
-            CanExecuteFunc = canExecuteFunc;
-            CatchCallback = catchCallback;
+            executeExclusiveAction = executeAction;
+            base.canExecuteFunc = canExecuteFunc;
+            base.catchCallback = catchCallback;
         }
 
         public override void Execute(object parameter)
@@ -33,56 +33,56 @@ namespace Plugins.ToolKits.MVVM
         }
         private void ExecuteExclusiveActionRun(object parameter)
         {
-            if (ExecuteExclusiveAction is null)
+            if (executeExclusiveAction is null)
             {
                 return;
             }
-            if (isRunning)
+            if (IsCommandExecuting)
             {
                 return;
             }
-            ExclusiveContext context = new ExclusiveContext(() => isRunning = true, () => isRunning = false);
+            ExclusiveContext context = new ExclusiveContext(() => IsCommandExecuting = true, () => IsCommandExecuting = false);
 
             try
             {
-                ExecuteExclusiveAction(context);
+                executeExclusiveAction(context);
             }
             catch (Exception e)
             {
-                if (CatchCallback is null)
+                if (catchCallback is null)
                 {
                     throw;
                 }
-                CatchCallback?.Invoke(e);
+                catchCallback?.Invoke(e);
             }
         }
 
         private void ExecuteActionRun(object parameter)
         {
-            if (ExecuteAction is null)
+            if (executeAction is null)
             {
                 return;
             }
             try
             {
-                if (isRunning)
+                if (IsCommandExecuting)
                 {
                     return;
                 }
-                isRunning = true;
-                ExecuteAction();
+                IsCommandExecuting = true;
+                executeAction();
             }
             catch (Exception e)
             {
-                if (CatchCallback is null)
+                if (catchCallback is null)
                 {
                     throw;
                 }
-                CatchCallback.Invoke(e);
+                catchCallback.Invoke(e);
             }
             finally
             {
-                isRunning = false;
+                IsCommandExecuting = false;
             }
         }
 

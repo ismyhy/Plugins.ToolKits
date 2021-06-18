@@ -1,13 +1,6 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Threading;
 
 namespace Plugins.ToolKits.Transmission
 {
@@ -36,10 +29,10 @@ namespace Plugins.ToolKits.Transmission
 
 
 
-        internal static ProtocolPacket BuildPacket(byte[] buffer, int offset, int length, PacketSetting setting )
+        internal static ProtocolPacket BuildPacket(byte[] buffer, int offset, int length, PacketSetting setting)
         {
-            return  new ProtocolPacket
-            { 
+            return new ProtocolPacket
+            {
                 Data = buffer,
                 Offset = offset,
                 DataLength = length,

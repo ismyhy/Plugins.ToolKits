@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
-namespace Plugins.ToolKits.Extensions
+namespace Plugins.ToolKits
 {
     public static class ReflectionExtensions
     {

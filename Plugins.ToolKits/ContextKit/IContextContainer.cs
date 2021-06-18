@@ -1,11 +1,10 @@
-﻿using Plugins.ToolKits.Attributes;
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.ContextKit
+namespace Plugins.ToolKits
 {
     public interface IContextContainer : IDisposable
     {

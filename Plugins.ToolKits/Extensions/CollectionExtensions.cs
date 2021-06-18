@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace Plugins.ToolKits.Extensions
+namespace Plugins.ToolKits
 {
     public static class CollectionExtensions
     {
