@@ -31,22 +31,7 @@ namespace ConsoleTest
         private static void Main(string[] args)
         {
 
-            var a=ArrayPool<int>.Shared;
-
-            var pool=  ObjectPool.Share<Test111>(1 );
-
-            var q=pool.Rent();
-
-            Task.Factory.StartNew(() =>
-            {
-                Thread.Sleep(5000);
-                pool.Return(q); 
-            }); 
-           
-
-            var q2 = pool.Rent();
-
-            return;
+          
 
             int serverIndex = 0;
             int clientIndex = 0;
@@ -64,15 +49,9 @@ namespace ConsoleTest
               {
                   string message = Encoding.UTF8.GetString(buffer);
                   if (serverIndex % 100 == 0)
-                      Console.WriteLine(message);
-                  //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
-                  //session.SendAsync(buffer2, 0, buffer2.Length, setting);
-                  Invoker.For(0, 10000, () =>
-                  {
-                      byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {clientIndex++}");
-
-                      session.Send(buffer2, 0, buffer2.Length, setting);
-                  });
+                      Console.WriteLine(message + "   " + session.GetHashCode());
+                  byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
+                  session.SendAsync(buffer2, 0, buffer2.Length, setting);
 
               })
               .UseLocalIPEndPoint(ip, serverPoart)
@@ -84,11 +63,11 @@ namespace ConsoleTest
               {
                   string message = Encoding.UTF8.GetString(buffer);
 
-                  //if (clientIndex % 100 == 0)
-                     Console.WriteLine(message + session.GetHashCode());
+                  if (clientIndex % 100 == 0)
+                      Console.WriteLine(message + "   "+ session.GetHashCode());
                   //Thread.Sleep(100);
-                  //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
-                  //session.SendAsync(buffer2, 0, buffer2.Length, setting);
+                  byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+                  session.SendAsync(buffer2, 0, buffer2.Length, setting);
               })
               .UseRemoteIPEndPoint(ip, serverPoart)
               .Build()

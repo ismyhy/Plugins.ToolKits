@@ -11,7 +11,7 @@ namespace Plugins.ToolKits.Transmission
     internal sealed class ProtocolPacket : IDisposable
     {
 
-        private const int TotalHeaderLength = 11;
+        private const int TotalHeaderLength = 10;
 
         private static int CommandCounter = 0;
 
