@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-
+using UdpClient = Plugins.ToolKits.Transmission.UdpClient;
 namespace Plugins.ToolKits.Transmission
 {
 
@@ -20,7 +20,7 @@ namespace Plugins.ToolKits.Transmission
         IUDPConfig UseTtl(short ttl);
         IUDPConfig UseDontFragment(bool dontFragment);
         IUDPConfig UseMulticastLoopback(bool multicastLoopback); 
-        IUDPConfig UseJoinMulticastGroup(bool joinMulticastGroup);
+        IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress);
         IUDPConfig UseAsynchronousExecutionCallback(bool asynchronousExecutionCallback);
         IUDPConfig UseLocalIPEndPoint(IPAddress localIp, int localPort);
         IUDPConfig UseRemoteIPEndPoint(IPAddress remoteIp, int remotePort);

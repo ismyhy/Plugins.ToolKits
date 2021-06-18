@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-
+using UdpClient = Plugins.ToolKits.Transmission.UdpClient;
 namespace Plugins.ToolKits.Transmission
 {
     internal class UDPChannelKeys
@@ -47,9 +48,13 @@ namespace Plugins.ToolKits.Transmission
             return this;
         }
 
-        public IUDPConfig UseJoinMulticastGroup(bool joinMulticastGroup)
+        public IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress)
         {
-            Context.Set(UDPChannelKeys.JoinMulticastGroup, joinMulticastGroup);
+            if(!Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup,out var list))
+            {
+                Context.Set(nameof(UdpClient.JoinMulticastGroup), list=new List<IPAddress>());
+            } 
+            list.Add(iPAddress);
             return this;
         }
 

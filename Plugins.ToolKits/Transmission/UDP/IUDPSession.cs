@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-
+using UdpClient = Plugins.ToolKits.Transmission.UdpClient;
 namespace Plugins.ToolKits.Transmission
 {
     public interface IUDPSession: IDisposable

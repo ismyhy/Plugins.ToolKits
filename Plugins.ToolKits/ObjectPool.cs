@@ -1,160 +1,121 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Plugins.ToolKits.ContextKit;
+using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Plugins.ToolKits
 {
 
-    public interface IResumable
+    public interface IResettable
     {
-        void Resume();
+        void Reset();
+    }
+
+    public static class ObjectPool
+    {
+        public static ObjectPool<Target> Share<Target>(int maxCount, Func<Target> createFunc) where Target : class, IResettable
+        {
+            if (createFunc == null)
+            {
+                throw new ArgumentNullException(nameof(createFunc));
+            }
+
+            return new ObjectPool<Target>(maxCount, createFunc);
+        }
+
+        public static ObjectPool<Target> Share<Target>(int maxCount ) where Target : class, IResettable,new()
+        { 
+            return new ObjectPool<Target>(maxCount,  ()=>new Target());
+        }
+         
+    }
+
+    internal static class ObjectPoolKeys
+    {
+        public const string ConcurrentDictionary = "ConcurrentDictionary";
+        public const string ConcurrentQueue = "ConcurrentQueue";
+        public const string Semaphore = "Semaphore";
+        public const string AutoResetEvent = "AutoResetEvent";
+        public const string CreateFunc = "CreateFunc";
     }
 
 
-    public  class ObjectPool<T> where T:class
+    public class ObjectPool<TType> where TType : class, IResettable 
     {
-        private Int32 _nCapacity;
-        private Int32 _nCurrentSize;
-        private Hashtable _listObjects;
-        private ArrayList _listFreeIndex;
-        private ArrayList _listUsingIndex;
-        private Type _typeObject;
-        private Object _objCreateParam;
-
-        public ObjectPool(Type type, Object create_param, Int32 init_size, Int32 capacity)
+        private ContextContainer container=new ContextContainer();
+         
+        internal ObjectPool(int maxCount, Func<TType> createFunc)
         {
-            if (init_size < 0 || capacity < 1 || init_size > capacity)
-            {
-                throw (new Exception("Invalid parameter!"));
-            }
-
-            _nCapacity = capacity;
-            _listObjects = new Hashtable(capacity);
-            _listFreeIndex = new ArrayList(capacity);
-            _listUsingIndex = new ArrayList(capacity);
-            _typeObject = type;
-            _objCreateParam = create_param;
-
-            for (int i = 0; i < init_size; i++)
-            {
-                PoolItem pitem = new PoolItem(type, create_param);
-                _listObjects.Add(pitem.InnerObjectHashcode, pitem);
-                _listFreeIndex.Add(pitem.InnerObjectHashcode);
-            }
-
-            _nCurrentSize = _listObjects.Count;
+            container.Set(ObjectPoolKeys.CreateFunc, createFunc);
+            container.Set(ObjectPoolKeys.ConcurrentDictionary, new ConcurrentDictionary<int, TType>()); 
+            container.Set(ObjectPoolKeys.ConcurrentQueue, new ConcurrentQueue<TType>()); 
+            container.Set(ObjectPoolKeys.Semaphore, new Semaphore(1, 1)); 
+            container.Set(ObjectPoolKeys.AutoResetEvent, new AutoResetEvent(false));
+             
+            MaxCount = maxCount;
         }
-
-        public void Release()
+        public int MaxCount { get; private set; }
+         
+        public TType Rent(int millisecondsTimeout=-1)
         {
-            lock (this)
+
+            var createFunc=container.Get<Func<TType>>(ObjectPoolKeys.CreateFunc);
+            var dict=container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary );
+            var queue=container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue );
+            var Semaphore=container.Get<Semaphore>(ObjectPoolKeys.Semaphore );
+            var autoReset=container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent );
+             
+            try
             {
-                foreach (DictionaryEntry de in _listObjects)
+                if (!Semaphore.WaitOne(millisecondsTimeout))
                 {
-                    ((PoolItem)de.Value).Release();
+                    throw new TimeoutException();
                 }
-                _listObjects.Clear();
-                _listFreeIndex.Clear();
-                _listUsingIndex.Clear();
-            }
-        }
 
-        public Int32 CurrentSize
-        {
-            get { return _nCurrentSize; }
-        }
-
-        public Int32 ActiveCount
-        {
-            get { return _listUsingIndex.Count; }
-        }
-
-        public Object GetOne()
-        {
-            lock (this)
-            {
-                if (_listFreeIndex.Count == 0)
+                do
                 {
-                    if (_nCurrentSize == _nCapacity)
+                    if (queue.TryDequeue(out var value))
                     {
-                        return null;
+                        return value;
                     }
-                    PoolItem pnewitem = new PoolItem(_typeObject, _objCreateParam);
-                    _listObjects.Add(pnewitem.InnerObjectHashcode, pnewitem);
-                    _listFreeIndex.Add(pnewitem.InnerObjectHashcode);
-                    _nCurrentSize++;
-                }
 
-                Int32 nFreeIndex = (Int32)_listFreeIndex[0];
-                PoolItem pitem = (PoolItem)_listObjects[nFreeIndex];
-                _listFreeIndex.RemoveAt(0);
-                _listUsingIndex.Add(nFreeIndex);
-
-                if (!pitem.IsValidate)
-                {
-                    pitem.Recreate();
-                }
-
-                pitem.Using = true;
-                return pitem.InnerObject;
-            }
-        }
-
-        public void FreeObject(Object obj)
-        {
-            lock (this)
-            {
-                int key = obj.GetHashCode();
-                if (_listObjects.ContainsKey(key))
-                {
-                    PoolItem item = (PoolItem)_listObjects[key];
-                    item.Using = false;
-                    _listUsingIndex.Remove(key);
-                    _listFreeIndex.Add(key);
-                }
-            }
-        }
-
-        public Int32 DecreaseSize(Int32 size)
-        {
-            Int32 nDecrease = size;
-            lock (this)
-            {
-                if (nDecrease <= 0)
-                {
-                    return 0;
-                }
-                if (nDecrease > _listFreeIndex.Count)
-                {
-                    nDecrease = _listFreeIndex.Count;
-                }
-
-                for (int i = 0; i < nDecrease; i++)
-                {
-                    _listObjects.Remove(_listFreeIndex[i]);
-                }
-
-                _listFreeIndex.Clear();
-                _listUsingIndex.Clear();
-
-                foreach (DictionaryEntry de in _listObjects)
-                {
-                    PoolItem pitem = (PoolItem)de.Value;
-                    if (pitem.Using)
+                    var totalCount = queue.Count + dict.Count;
+                    if (totalCount < MaxCount)
                     {
-                        _listUsingIndex.Add(pitem.InnerObjectHashcode);
+                        value = createFunc();
+                        dict[value.GetHashCode()] = value;
+                        return value;
                     }
-                    else
+                    if (!autoReset.WaitOne(millisecondsTimeout))
                     {
-                        _listFreeIndex.Add(pitem.InnerObjectHashcode);
+                        throw new TimeoutException();
                     }
-                }
+                } while (true); 
             }
-            _nCurrentSize -= nDecrease;
-            return nDecrease;
+            finally
+            {
+                Semaphore.Release(1);
+            } 
         }
+
+
+        public void Return(TType target,bool needReset=true)
+        {
+            if(target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            } 
+            if (needReset)
+            {
+                target.Reset();
+            }
+            var dict = container.Get<ConcurrentDictionary<int, TType>>(ObjectPoolKeys.ConcurrentDictionary);
+            var queue = container.Get<ConcurrentQueue<TType>>(ObjectPoolKeys.ConcurrentQueue); 
+            var autoReset = container.Get<AutoResetEvent>(ObjectPoolKeys.AutoResetEvent); 
+            queue.Enqueue(target);
+            dict.TryRemove(target.GetHashCode(),out var _); 
+            autoReset.Set();
+        }
+
     }
 }

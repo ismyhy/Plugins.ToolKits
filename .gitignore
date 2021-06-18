@@ -3,3 +3,10 @@
 ################################################################################
 
 /bin/AnyCPU/Debug
+/ConsoleTest/bin/Debug/netcoreapp3.1
+/ConsoleTest/obj
+/Plugins.ToolKits/obj
+/bin/AnyCPU/Release
+/.vs/VSWorkspaceState.json
+/.vs/Plugins.ToolKits/DesignTimeBuild/.dtbcache.v2
+/.vs/Plugins.ToolKits/v17/.suo

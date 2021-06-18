@@ -39,8 +39,7 @@ namespace Plugins.ToolKits.Transmission
         internal static ProtocolPacket BuildPacket(byte[] buffer, int offset, int length, PacketSetting setting )
         {
             return  new ProtocolPacket
-            {
-    
+            { 
                 Data = buffer,
                 Offset = offset,
                 DataLength = length,

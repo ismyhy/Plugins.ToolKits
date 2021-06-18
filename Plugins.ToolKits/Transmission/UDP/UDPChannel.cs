@@ -4,20 +4,24 @@ using Plugins.ToolKits.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Plugins.ToolKits.Transmission
 {
+    [DebuggerDisplay("Local:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.LocalIPEndPoint)}   Remote:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.RemoteIPEndPoint)}")]
     public abstract partial class UDPChannel : IUDPBuilder, IUDPConfig, IUDPChannel
     {
+
         public static IUDPConfig Create()
         {
             return new Plugins.ToolKits.Transmission.UDP.UDPChannel();
         }
+
+        public bool IsRunning { get; private set; }
 
         protected UDPChannel()
         {
@@ -35,15 +39,15 @@ namespace Plugins.ToolKits.Transmission
 
         public void Dispose()
         {
-            if (!Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
+            IsRunning = false;
+
+            if (Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
             {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
+                udpClient?.Close();
+                Context.RemoveKey(UDPChannelKeys.UdpClient);
+                Context.RemoveKey(UDPChannelKeys.UDPChannel);
             }
-
-            Context.ToObjectCollection().OfType<IDisposable>().ForEach(i => Invoker.RunIgnore<Exception>(i.Dispose));
-
-            Context.Clear();
-            udpClient?.Close();
+            Context.ToObjectCollection().OfType<IDisposable>().ForEach(c => Invoker.RunIgnore<Exception>(c.Dispose));
             Context?.Dispose();
             SyncHandles?.Clear();
         }
@@ -86,70 +90,54 @@ namespace Plugins.ToolKits.Transmission
             {
                 throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
             }
-            Context.TryGet<bool>(UDPChannelKeys.JoinMulticastGroup, out bool joinMulticastGroup);
+
+            ConcurrentDictionary<int, IUDPSession> Sessions = new();
 
             Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
-
             Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<IUDPSession, byte[]> receiveFunc);
+            Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out var list);
+
+            list?.ForEach(x => udpClient.JoinMulticastGroup(x));
+             
+            IsRunning = true;
 
             udpClient.BeginReceive(ReceiveCallback, udpClient);
-
-            if (joinMulticastGroup)
-            {
-                Context.TryGet<IPEndPoint>(UDPChannelKeys.RemoteIPEndPoint, out IPEndPoint remoteEndPoint);
-                ProtocolPacket p = new ProtocolPacket
-                {
-                    JoinMulticastGroup = true
-                };
-                ClientSender(p, remoteEndPoint);
-            }
-
 
             return this;
 
             void ReceiveCallback(IAsyncResult iar)
             {
-                if (!(iar.AsyncState is UdpClient udpClient))
+                if ( iar.AsyncState is not UdpClient udpClient  || ! IsRunning)
                 {
                     return;
                 }
-
+                 
                 if (iar.IsCompleted)
                 {
-                    IPEndPoint receivedRemoteEndPoint = null;
-                    byte[] receiveBytes = udpClient.EndReceive(iar, ref receivedRemoteEndPoint);
+                    IPEndPoint receivedEndPoint = null;
 
-                    ProtocolPacket protocol = ProtocolPacket.FromBuffer(receiveBytes, 0, receiveBytes.Length);
+                    var receiveBytes = udpClient.EndReceive(iar, ref receivedEndPoint);
 
+                    var protocol = ProtocolPacket.FromBuffer(receiveBytes, 0, receiveBytes.Length);
 
-                    if (protocol.ReportArrived || protocol.JoinMulticastGroup)
+                    var dataBuffer = protocol.Data;
+                    if (protocol.ReportArrived)
                     {
                         Task.Factory.StartNew(() =>
                         {
-                            byte[] ipAddress = receivedRemoteEndPoint?.Address?.GetAddressBytes() ?? new byte[] { 127, 0, 0, 1 }; ;
-                            IPEndPoint remoteEndPoint = new IPEndPoint(new IPAddress(ipAddress), receivedRemoteEndPoint?.Port ?? 0);
-                            ProtocolPacket p = protocol.CopyTo(new ProtocolPacket());
-                            p.JoinMulticastGroup = false;
-                            p.Data = new byte[0];
-                            p.Offset = 0;
-                            p.DataLength = 0;
-                            p.UsingRemoteEndPoint = true;
-                            p.ReportArrived = false;
-                            ClientSender(p, remoteEndPoint);
+                            byte[] ipAddress = receivedEndPoint?.Address?.GetAddressBytes() ?? new byte[] { 127, 0, 0, 1 }; ;
+                            IPEndPoint remoteEndPoint = new IPEndPoint(new IPAddress(ipAddress), receivedEndPoint?.Port ?? 0);
+
+                            protocol.Data = new byte[0];
+                            protocol.Offset = 0;
+                            protocol.DataLength = 0;
+                            protocol.UsingRemoteEndPoint = true;
+                            protocol.ReportArrived = false;
+                            ClientSender(protocol, remoteEndPoint);
                         }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                     }
+
                     udpClient.BeginReceive(ReceiveCallback, udpClient);
-
-                    if (protocol.JoinMulticastGroup)
-                    {
-                        if (!Context.TryGet(UDPChannelKeys.UdpClient, out UdpClient udpClient2))
-                        {
-                            throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
-                        }
-                        udpClient2.JoinMulticastGroup(receivedRemoteEndPoint.Address);
-                        return;
-                    }
-
 
                     if (SyncHandles.TryGetValue(protocol.Counter, out EventWaitHandle waitHandle))
                     {
@@ -157,27 +145,29 @@ namespace Plugins.ToolKits.Transmission
                         return;
                     }
 
-                    UDPSession session = new UDPSession(Context)
+                    var key = receivedEndPoint.Address.GetHashCode() ^ receivedEndPoint.Port;
+                    var session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
                     {
-                        RemoteEndPoint = receivedRemoteEndPoint
-                    };
+                        RemoteEndPoint = receivedEndPoint
+                    });
+
                     if (acceptAsync)
                     {
                         Task.Factory.StartNew(() =>
                         {
-                            receiveFunc?.Invoke(session, protocol.Data);
+                            receiveFunc?.Invoke(session, dataBuffer);
                         }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
-
                     }
                     else
                     {
-                        receiveFunc?.Invoke(session, protocol.Data);
+                        receiveFunc?.Invoke(session, dataBuffer);
                     }
                     return;
 
                 }
 
-                udpClient.BeginReceive(ReceiveCallback, udpClient);
+                Invoker.RunIgnore<Exception>(() => udpClient.BeginReceive(ReceiveCallback, udpClient));
+
             }
         }
 
@@ -196,12 +186,10 @@ namespace Plugins.ToolKits.Transmission
             }
 
             EventWaitHandle awaiter = null;
-             
+
             byte[] buffer = packet.ToBuffer();
 
-            //IPEndPoint remotePoint = remoteEndPoint ?? new IPEndPoint(new IPAddress(packet.Ip), packet.Port);
-
-            if (packet.ReportArrived || packet.JoinMulticastGroup)
+            if (packet.ReportArrived)
             {
                 SyncHandles[packet.Counter] = awaiter = new ManualResetEvent(false);
             }
@@ -217,7 +205,7 @@ namespace Plugins.ToolKits.Transmission
                 semaphore.Release(1);
                 return 0;
             }
-            if (!packet.ReportArrived && !packet.JoinMulticastGroup)
+            if (!packet.ReportArrived)
             {
                 semaphore.Release(1);
                 return sendCount;
@@ -232,6 +220,8 @@ namespace Plugins.ToolKits.Transmission
 
 
         private readonly IDictionary<long, EventWaitHandle> SyncHandles = new ConcurrentDictionary<long, EventWaitHandle>();
+
+
 
         #endregion
 
@@ -249,4 +239,13 @@ namespace Plugins.ToolKits.Transmission
         public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
     }
 
+
+    internal class UdpClient : System.Net.Sockets.UdpClient
+    {
+        public UdpClient(IPEndPoint localEP) : base(localEP)
+        {
+        }
+
+        public bool IsActive => base.Active;
+    }
 }

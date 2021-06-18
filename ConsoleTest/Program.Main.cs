@@ -1,9 +1,11 @@
-﻿using Plugins.ToolKits.Extensions;
+﻿using Plugins.ToolKits;
+using Plugins.ToolKits.Extensions;
 using Plugins.ToolKits.MVVM;
 using Plugins.ToolKits.Transmission;
 using Plugins.ToolKits.Validatement;
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,8 +19,35 @@ namespace ConsoleTest
 {
     internal partial class Program
     {
+        public class Test111 : IResettable
+        {
+            public void Reset()
+            {
+                
+            }
+        }
+
+
         private static void Main(string[] args)
         {
+
+            var a=ArrayPool<int>.Shared;
+
+            var pool=  ObjectPool.Share<Test111>(1 );
+
+            var q=pool.Rent();
+
+            Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(5000);
+                pool.Return(q); 
+            }); 
+           
+
+            var q2 = pool.Rent();
+
+            return;
+
             int serverIndex = 0;
             int clientIndex = 0;
             IPAddress ip = IPAddress.Parse("127.0.0.1");
@@ -38,7 +67,12 @@ namespace ConsoleTest
                       Console.WriteLine(message);
                   //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
                   //session.SendAsync(buffer2, 0, buffer2.Length, setting);
+                  Invoker.For(0, 10000, () =>
+                  {
+                      byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {clientIndex++}");
 
+                      session.Send(buffer2, 0, buffer2.Length, setting);
+                  });
 
               })
               .UseLocalIPEndPoint(ip, serverPoart)
@@ -50,29 +84,28 @@ namespace ConsoleTest
               {
                   string message = Encoding.UTF8.GetString(buffer);
 
-                  if (clientIndex % 100 == 0)
-                      Console.WriteLine(message);
-                  Thread.Sleep(100);
-                  byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
-                  session.SendAsync(buffer2, 0, buffer2.Length, setting);
+                  //if (clientIndex % 100 == 0)
+                     Console.WriteLine(message + session.GetHashCode());
+                  //Thread.Sleep(100);
+                  //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+                  //session.SendAsync(buffer2, 0, buffer2.Length, setting);
               })
               .UseRemoteIPEndPoint(ip, serverPoart)
               .Build()
               .RunAsync();
 
-            Invoker.For(0, 10000000, () =>
+            Invoker.For(0, 1, () =>
               {
                   byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
 
                   channel2.Send(buffer2, 0, buffer2.Length, setting);
               });
-
-
-    
-
+             
             Console.ReadKey();
-
-
+             
+            
+            channel2.Dispose();
+            channel.Dispose();
 
 
             List<KeyValuePair<MethodInfo, TestAttribute>> actions = typeof(Program).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public)

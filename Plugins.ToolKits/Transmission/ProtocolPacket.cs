@@ -16,18 +16,14 @@ namespace Plugins.ToolKits.Transmission
         private static int CommandCounter = 0;
 
         internal bool UsingRemoteEndPoint = false;
-
-
+         
         public ProtocolPacket()
         {
 
         }
-
-        //internal byte[] Ip;
-        //internal int Port;
+         
         internal bool IsCompress;
-        internal int Counter;
-        internal bool JoinMulticastGroup = false;
+        internal int Counter; 
         internal bool ReportArrived = true;
         internal int PacketLength;
         internal byte[] Data;
@@ -35,24 +31,15 @@ namespace Plugins.ToolKits.Transmission
         internal int DataLength;
         public void Dispose()
         {
+            IsCompress = false;
+            Data=null;  
+            Offset = 0;
+            PacketLength = 0;
+            ReportArrived = false;
+            Counter= 0;
+            DataLength = 0;
         }
-
-        public ProtocolPacket CopyTo(ProtocolPacket packet)
-        {
-            packet.Counter = Counter;
-            packet.JoinMulticastGroup = JoinMulticastGroup;
-            packet.IsCompress = IsCompress;
-            packet.PacketLength = PacketLength;
-            //packet.Ip = Ip;
-            //packet.Port = Port;
-            packet.Data = Data;
-            packet.Offset = Offset;
-            packet.DataLength = DataLength;
-            packet.ReportArrived = ReportArrived;
-            return packet;
-        }
-
-
+         
         public byte[] ToBuffer()
         {
 
@@ -74,12 +61,10 @@ namespace Plugins.ToolKits.Transmission
             using BinaryWriter write = new BinaryWriter(stream);
 
             write.Write(PacketLength);
-            write.Write(Counter);
-            write.Write(JoinMulticastGroup ? 1 : 0);
+            write.Write(Counter); 
             write.Write(IsCompress ? (byte)1 : (byte)0);
             write.Write(ReportArrived ? (byte)1 : (byte)0);
-            //write.Write(Ip);
-            //write.Write((short)Port);
+         
             write.Write(dataTemp, offset, dataLength);
             return stream.ToArray();
         }
@@ -104,12 +89,10 @@ namespace Plugins.ToolKits.Transmission
             using BinaryReader reader = new BinaryReader(stream);
 
             protocol.PacketLength = reader.ReadInt32();
-            protocol.Counter = reader.ReadInt32();
-            protocol.JoinMulticastGroup = reader.ReadByte() == 1;
+            protocol.Counter = reader.ReadInt32(); 
             protocol.IsCompress = reader.ReadByte() == 1;
             protocol.ReportArrived = reader.ReadByte() == 1;
-            //protocol.Ip = reader.ReadBytes(4);
-            //protocol.Port = reader.ReadInt16();
+            
             int effectiveDataLength = protocol.PacketLength - TotalHeaderLength;
             if (effectiveDataLength > 0)
             {
