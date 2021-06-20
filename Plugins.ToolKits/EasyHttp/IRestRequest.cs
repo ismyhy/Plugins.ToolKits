@@ -42,10 +42,10 @@ namespace Plugins.ToolKits.EasyHttp
         IRestRequest UseConnectionGroupName(string connectionGroupName);
         IRestRequest UseDefaultCredentials(bool useDefaultCredentials);
         IRestRequest UseExpect(bool expect);
-        IRestRequest UseClientCertificates(X509CertificateCollection clientCertificates);
+        IRestRequest UseClientCertificates([NotNull] X509CertificateCollection clientCertificates);
 
         IRestRequest UseRemoteCertificateValidationCallback(
-            RemoteCertificateValidationCallback remoteCertificateValidationCallback);
+            [NotNull] RemoteCertificateValidationCallback remoteCertificateValidationCallback);
 
         IRestRequest UseIfModifiedSince(DateTime ifModifiedSince);
         IRestRequest UseDate(DateTime date);

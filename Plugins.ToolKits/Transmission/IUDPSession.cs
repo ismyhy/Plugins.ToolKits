@@ -12,8 +12,7 @@ namespace Plugins.ToolKits.Transmission
 
         int Send(byte[] buffer, int offset, int length, PacketSetting setting = null);
     }
-
-
+     
     [DebuggerDisplay("{RemoteEndPoint}")]
     internal class UDPSession : IUDPSession
     {
@@ -31,15 +30,13 @@ namespace Plugins.ToolKits.Transmission
         }
 
         public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
-        {
-            if (!Context.TryGet<UDPChannel>(UDPChannelKeys.UDPChannel, out UDPChannel udpClient))
-            {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
-            }
-
+        { 
             ProtocolPacket packet = TransmissionAssist.BuildPacket(buffer, offset, length, setting);
             packet.RefreshCounter();
-            int sendCount = udpClient.ClientSender(packet, RemoteEndPoint, setting?.MillisecondsTimeout ?? -1);
+
+            var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender);
+             
+            int sendCount = sender(packet, RemoteEndPoint, setting?.MillisecondsTimeout ?? -1); 
 
             return sendCount;
         }

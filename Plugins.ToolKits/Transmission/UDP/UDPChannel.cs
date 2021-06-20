@@ -23,8 +23,8 @@ namespace Plugins.ToolKits.Transmission
 
         protected UDPChannel()
         {
-            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1));
-            Context.Set(UDPChannelKeys.UDPChannel, this);
+            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1)); 
+            Context.Set<Func<ProtocolPacket,IPEndPoint,int,int>>(UDPChannelKeys.MessageSender, this.PacketSender);
         }
 
 
@@ -42,8 +42,7 @@ namespace Plugins.ToolKits.Transmission
             if (Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
             {
                 udpClient?.Close();
-                Context.RemoveKey(UDPChannelKeys.UdpClient);
-                Context.RemoveKey(UDPChannelKeys.UDPChannel);
+                Context.RemoveKey(UDPChannelKeys.UdpClient); 
             }
             Context.ToObjectCollection().OfType<IDisposable>().ForEach(c => Invoker.RunIgnore<Exception>(c.Dispose));
             Context?.Dispose();
@@ -63,7 +62,7 @@ namespace Plugins.ToolKits.Transmission
 
             ProtocolPacket packet = TransmissionAssist.BuildPacket(buffer, offset, length, setting);
             packet.RefreshCounter();
-            return ClientSender(packet, endPoint, setting?.MillisecondsTimeout ?? -1);
+            return PacketSender(packet, endPoint, setting?.MillisecondsTimeout ?? -1);
         }
 
 
@@ -94,6 +93,8 @@ namespace Plugins.ToolKits.Transmission
             Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
             Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<IUDPSession, byte[]> receiveFunc);
             Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list);
+
+
 
             list?.ForEach(x => udpClient.JoinMulticastGroup(x));
 
@@ -131,7 +132,7 @@ namespace Plugins.ToolKits.Transmission
                             protocol.DataLength = 0;
                             protocol.UsingRemoteEndPoint = true;
                             protocol.ReportArrived = false;
-                            ClientSender(protocol, remoteEndPoint);
+                            PacketSender(protocol, remoteEndPoint);
                         }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                     }
 
@@ -170,7 +171,7 @@ namespace Plugins.ToolKits.Transmission
         }
 
 
-        internal int ClientSender(ProtocolPacket packet, IPEndPoint remoteEndPoint, int millisecondsTimeout = -1)
+        internal int PacketSender(ProtocolPacket packet, IPEndPoint remoteEndPoint, int millisecondsTimeout = -1)
         {
 
             if (!Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))

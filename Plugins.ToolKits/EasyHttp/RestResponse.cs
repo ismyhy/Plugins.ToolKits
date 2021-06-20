@@ -65,18 +65,18 @@ namespace Plugins.ToolKits.EasyHttp
                 throw e;
             }
 
-            if (!Context.Get<bool>(EasyHttpKeys.CanGetResult))
-            {
-                throw new InvalidOperationException("fileWriter callback has been registered");
-            }
 
             Stream stream = Context.Get<Stream>(EasyHttpKeys.ResponseStream);
 
             if (stream is null || stream.Length == 0 || stream.CanRead == false)
             {
-                return default;
+                throw new InvalidOperationException("No valid response stream ");
             }
 
+            if (Context.TryGet<bool>(EasyHttpKeys.CanGetResult, out var canRead) && canRead == false)
+            {
+                throw new InvalidOperationException("fileWriter callback method may have been registered");
+            }
 
             byte[] buffer = new byte[stream.Length];
             stream.Read(buffer, 0, buffer.Length);

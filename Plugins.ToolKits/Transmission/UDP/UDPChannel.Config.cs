@@ -13,6 +13,7 @@ namespace Plugins.ToolKits.Transmission
         public const string Semaphore = "Semaphore";
         public const string UDPChannel = "UDPChannel";
         public const string JoinMulticastGroup = "JoinMulticastGroup";
+        public const string MessageSender= "MessageSender";
     }
 
     public partial class UDPChannel
