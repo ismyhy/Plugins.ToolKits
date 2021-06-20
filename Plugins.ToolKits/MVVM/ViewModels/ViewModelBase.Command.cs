@@ -9,7 +9,7 @@ namespace Plugins.ToolKits.MVVM
     {
         #region  CommandExtensions
 
-        public RelayCommand Execute(Action commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
+        public RelayCommand ExecuteCommand(Action commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -21,7 +21,7 @@ namespace Plugins.ToolKits.MVVM
 
         }
 
-        public RelayCommand<TParameter> Execute<TParameter>(Action<TParameter> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> ExecuteCommand<TParameter>(Action<TParameter> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -33,7 +33,7 @@ namespace Plugins.ToolKits.MVVM
 
         }
 
-        public RelayCommand ExecuteExclusive(Action<IExclusiveContext> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
+        public RelayCommand ExecuteExclusiveCommand(Action<IExclusiveContext> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -44,7 +44,7 @@ namespace Plugins.ToolKits.MVVM
             return command;
         }
 
-        public RelayCommand<TParameter> ExecuteExclusive<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> ExecuteExclusiveCommand<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Func<bool> canExecuteAction = null, Action<Exception> exceptionCallback = null, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -57,7 +57,7 @@ namespace Plugins.ToolKits.MVVM
         }
 
 
-        public RelayCommand TryExecute(Action commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand TryExecuteCommand(Action commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -73,7 +73,7 @@ namespace Plugins.ToolKits.MVVM
             return command;
         }
 
-        public RelayCommand<TParameter> TryExecute<TParameter>(Action<TParameter> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> TryExecuteCommand<TParameter>(Action<TParameter> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -90,7 +90,7 @@ namespace Plugins.ToolKits.MVVM
 
         }
 
-        public RelayCommand TryExecuteExclusive(Action<IExclusiveContext> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand TryExecuteExclusiveCommand(Action<IExclusiveContext> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -107,7 +107,7 @@ namespace Plugins.ToolKits.MVVM
             return command;
         }
 
-        public RelayCommand<TParameter> TryExecuteExclusive<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> TryExecuteExclusiveCommand<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Func<bool> canExecuteAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -124,7 +124,7 @@ namespace Plugins.ToolKits.MVVM
 
 
 
-        public RelayCommand TryExecute(Action commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand TryExecuteCommand(Action commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -141,7 +141,7 @@ namespace Plugins.ToolKits.MVVM
 
         }
 
-        public RelayCommand<TParameter> TryExecute<TParameter>(Action<TParameter> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> TryExecuteCommand<TParameter>(Action<TParameter> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -157,7 +157,7 @@ namespace Plugins.ToolKits.MVVM
             return command;
         }
 
-        public RelayCommand TryExecuteExclusive(Action<IExclusiveContext> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand TryExecuteExclusiveCommand(Action<IExclusiveContext> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {
@@ -174,7 +174,7 @@ namespace Plugins.ToolKits.MVVM
 
         }
 
-        public RelayCommand<TParameter> TryExecuteExclusive<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
+        public RelayCommand<TParameter> TryExecuteExclusiveCommand<TParameter>(Action<IExclusiveContext<TParameter>> commandAction, Action<Exception> exceptionCallback, [CallerMemberName] string propertyName = null)
         {
             if (commandAction is null)
             {

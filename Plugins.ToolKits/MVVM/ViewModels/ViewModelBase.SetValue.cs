@@ -8,14 +8,12 @@ namespace Plugins.ToolKits.MVVM
     public abstract partial class ViewModelBase
     {
         private readonly ConcurrentDictionary<string, object>
-            _valueObjects = new ConcurrentDictionary<string, object>();
-
-        private object _identity;
-
+            PropertyInfoValues = new ConcurrentDictionary<string, object>();
+          
         public virtual object Identity
         {
-            get => _identity;
-            set => SetProperty(ref _identity, value, EqualityComparer<object>.Default);
+            get => PropertyInfoValues[nameof(Identity)];
+            set => PropertyInfoValues[nameof(Identity)]=value;
         }
 
 
@@ -45,7 +43,7 @@ namespace Plugins.ToolKits.MVVM
                 throw new ArgumentNullException(nameof(propertyName));
             }
 
-            if (_valueObjects.TryGetValue(propertyName, out object oldValue) && oldValue is TType old)
+            if (PropertyInfoValues.TryGetValue(propertyName, out object oldValue) && oldValue is TType old)
             {
                 if (EqualityComparer<TType>.Default.Equals(old, newValue))
                 {
@@ -54,7 +52,7 @@ namespace Plugins.ToolKits.MVVM
             }
 
             RaisePropertyChanging(propertyName);
-            _valueObjects[propertyName] = newValue;
+            PropertyInfoValues[propertyName] = newValue;
             RaisePropertyChanged(propertyName);
             return true;
         }
@@ -73,7 +71,7 @@ namespace Plugins.ToolKits.MVVM
                 throw new ArgumentNullException(nameof(comparer));
             }
 
-            if (_valueObjects.TryGetValue(propertyName, out object oldValue) && oldValue is TType old)
+            if (PropertyInfoValues.TryGetValue(propertyName, out object oldValue) && oldValue is TType old)
             {
                 if (comparer.Equals(old, newValue))
                 {
@@ -82,7 +80,7 @@ namespace Plugins.ToolKits.MVVM
             }
 
             RaisePropertyChanging(propertyName);
-            _valueObjects[propertyName] = newValue;
+            PropertyInfoValues[propertyName] = newValue;
             RaisePropertyChanged(propertyName);
             return true;
         }
@@ -94,12 +92,12 @@ namespace Plugins.ToolKits.MVVM
                 throw new ArgumentNullException(nameof(propertyName));
             }
 
-            if (_valueObjects.TryGetValue(propertyName, out object value))
+            if (PropertyInfoValues.TryGetValue(propertyName, out object value))
             {
                 return (TType)value;
             }
 
-            _valueObjects[propertyName] = defaultValue;
+            PropertyInfoValues[propertyName] = defaultValue;
 
             return defaultValue;
         }

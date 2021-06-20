@@ -72,7 +72,7 @@ namespace Plugins.ToolKits.MVVM
 
         public virtual void Dispose()
         {
-            _valueObjects?.Clear();
+            PropertyInfoValues?.Clear();
         }
     }
 }
