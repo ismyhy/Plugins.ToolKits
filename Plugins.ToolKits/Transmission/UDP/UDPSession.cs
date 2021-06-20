@@ -1,20 +1,14 @@
 ﻿
+using Plugins.ToolKits.Transmission.Protocol;
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-namespace Plugins.ToolKits.Transmission
+namespace Plugins.ToolKits.Transmission.UDP
 {
-    public interface IUDPSession : IDisposable
-    {
-        Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null);
-
-        int Send(byte[] buffer, int offset, int length, PacketSetting setting = null);
-    }
-     
     [DebuggerDisplay("{RemoteEndPoint}")]
-    internal class UDPSession : IUDPSession
+    internal class UDPSession : ISession
     {
         private ContextContainer Context;
         public UDPSession(ContextContainer context)
@@ -30,8 +24,21 @@ namespace Plugins.ToolKits.Transmission
         }
 
         public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
-        { 
-            ProtocolPacket packet = TransmissionAssist.BuildPacket(buffer, offset, length, setting);
+        {
+
+            var isCompress = setting?.IsCompressBuffer ?? false;
+            if (isCompress)
+            {
+                var exist = Context.TryGet(UDPChannelKeys.RemoteIPEndPoint, out Func<byte[], int, int, byte[]> func);
+                if (exist)
+                {
+                    buffer = func(buffer, offset, length);
+                    offset = 0;
+                    length = buffer.Length;
+                }
+            }
+
+            ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
             packet.RefreshCounter();
 
             var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender);

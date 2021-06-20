@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 
-namespace Plugins.ToolKits.Transmission
+namespace Plugins.ToolKits.Transmission.Protocol
 {
     [DebuggerDisplay("PacketLength:{PacketLength} DataLength:{Data?.Length ?? 0}")]
     internal sealed class ProtocolPacket : IDisposable
@@ -44,18 +44,9 @@ namespace Plugins.ToolKits.Transmission
         {
 
             bool hasData = Data != null && DataLength > 0;
-            int offset = Offset;
-            int dataLength = DataLength;
-            byte[] dataTemp = Data;
+            
 
-            if (hasData && IsCompress)
-            {
-                dataTemp = Compress(dataTemp, offset, dataLength);
-                offset = 0;
-                dataLength = dataTemp.Length;
-            }
-
-            PacketLength = TotalHeaderLength + dataLength;
+            PacketLength = TotalHeaderLength + DataLength;
 
             using MemoryStream stream = new MemoryStream();
             using BinaryWriter write = new BinaryWriter(stream);
@@ -65,7 +56,7 @@ namespace Plugins.ToolKits.Transmission
             write.Write(IsCompress ? (byte)1 : (byte)0);
             write.Write(ReportArrived ? (byte)1 : (byte)0);
 
-            write.Write(dataTemp, offset, dataLength);
+            write.Write(Data, Offset, DataLength);
             return stream.ToArray();
         }
 
@@ -107,10 +98,22 @@ namespace Plugins.ToolKits.Transmission
             return protocol;
         }
 
+        internal static ProtocolPacket BuildPacket(byte[] buffer, int offset, int length, PacketSetting setting)
+        { 
+            return new ProtocolPacket
+            {
+                Data = buffer,
+                Offset = offset,
+                DataLength = length,
+                IsCompress = setting?.IsCompressBuffer ?? false,
+                ReportArrived = setting?.ReportArrived ?? false,
+            };
+        }
+
 
         #region   Compress  &  Decompress
 
-        private static byte[] Compress(byte[] bytes, int offset, int length)
+        internal static byte[] Compress(byte[] bytes, int offset, int length)
         {
             using MemoryStream compressStream = new MemoryStream();
 
@@ -123,7 +126,7 @@ namespace Plugins.ToolKits.Transmission
         }
 
 
-        private static byte[] Decompress(byte[] bytes, int offset, int length)
+        internal static byte[] Decompress(byte[] bytes, int offset, int length)
         {
             using MemoryStream compressStream = new MemoryStream(bytes, offset, length);
 

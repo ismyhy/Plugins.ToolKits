@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Plugins.ToolKits.Transmission.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Net;
-namespace Plugins.ToolKits.Transmission
+using System.Net.Sockets;
+
+namespace Plugins.ToolKits.Transmission.UDP
 {
     internal class UDPChannelKeys
     {
@@ -14,10 +17,18 @@ namespace Plugins.ToolKits.Transmission
         public const string UDPChannel = "UDPChannel";
         public const string JoinMulticastGroup = "JoinMulticastGroup";
         public const string MessageSender= "MessageSender";
+        public const string Decompress= "Decompress";
+        public const string Compress = "Compress";
     }
-
-    public partial class UDPChannel
+    public class UDPConfig : IUDPConfig
     {
+        private readonly ContextContainer Context=new ContextContainer();   
+        public UDPConfig()
+        {
+            Context.Set<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Decompress), ProtocolPacket.Decompress);
+            Context.Set<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Compress), ProtocolPacket.Compress);
+        }
+
         IUDPConfig IUDPConfig.UseDontFragment(bool dontFragment)
         {
             Context.Set(nameof(UdpClient.DontFragment), dontFragment);
@@ -49,6 +60,11 @@ namespace Plugins.ToolKits.Transmission
 
         public IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress)
         {
+            if(iPAddress == null)
+            {
+                throw new ArgumentNullException(nameof(iPAddress)); 
+            }
+
             if (!Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list))
             {
                 Context.Set(nameof(UdpClient.JoinMulticastGroup), list = new List<IPAddress>());
@@ -57,18 +73,31 @@ namespace Plugins.ToolKits.Transmission
             return this;
         }
 
-        IUDPConfig IUDPConfig.UseReceiveCallback(Action<IUDPSession, byte[]> receiveCallback)
+        IUDPConfig IUDPConfig.UseReceiveCallback(Action<ISession, byte[]> receiveCallback)
         {
+            if(receiveCallback == null)
+            {
+                throw new ArgumentNullException(nameof(receiveCallback));
+            }
+
             Context.Set(UDPChannelKeys.ReceiveFunc, receiveCallback);
             return this;
         }
         IUDPConfig IUDPConfig.UseLocalIPEndPoint(IPAddress localIp, int localPort)
         {
+            if (localIp == null)
+            {
+                throw new ArgumentNullException(nameof(localIp));
+            }
             Context.Set(UDPChannelKeys.LocalIPEndPoint, new IPEndPoint(localIp, localPort));
             return this;
         }
         IUDPConfig IUDPConfig.UseRemoteIPEndPoint(IPAddress remoteIp, int remotePort)
         {
+            if (remoteIp == null)
+            {
+                throw new ArgumentNullException(nameof(remoteIp));
+            }
             Context.Set(UDPChannelKeys.RemoteIPEndPoint, new IPEndPoint(remoteIp, remotePort));
             return this;
         }
@@ -79,7 +108,7 @@ namespace Plugins.ToolKits.Transmission
             return this;
         }
 
-        IUDPBuilder IUDPConfig.Build()
+        IUDPChannel IUDPConfig.Build()
         {
             if (!Context.TryGet<IPEndPoint>(UDPChannelKeys.LocalIPEndPoint, out IPEndPoint endPoint))
             {
@@ -88,29 +117,42 @@ namespace Plugins.ToolKits.Transmission
 
             UdpClient udpClient = new UdpClient(endPoint);
 
-            if (Context.TryGet<bool>(nameof(UdpClient.DontFragment), out bool dontFragment))
+            var type = typeof(UdpClient);
+            foreach (var item in Context.AllKey)
             {
-                udpClient.DontFragment = dontFragment;
+                var targetValue= Context.Get<object>(item);
+                type.GetProperty(item)?.SetValue(udpClient, targetValue);
             }
-            if (Context.TryGet<bool>(nameof(UdpClient.EnableBroadcast), out bool EnableBroadcast))
-            {
-                udpClient.EnableBroadcast = EnableBroadcast;
-            }
-            if (Context.TryGet<bool>(nameof(UdpClient.ExclusiveAddressUse), out bool ExclusiveAddressUse))
-            {
-                udpClient.ExclusiveAddressUse = ExclusiveAddressUse;
-            }
-            if (Context.TryGet<bool>(nameof(UdpClient.MulticastLoopback), out bool MulticastLoopback))
-            {
-                udpClient.MulticastLoopback = MulticastLoopback;
-            }
-            if (Context.TryGet<short>(nameof(UdpClient.Ttl), out short Ttl))
-            {
-                udpClient.Ttl = Ttl;
-            }
+              
+            var udpChannel = new UDPChannel();
+            Context.CopyTo(udpChannel.Context);
+            udpChannel.Context.Set(UDPChannelKeys.UdpClient, udpClient);
 
-            Context.Set(UDPChannelKeys.UdpClient, udpClient);
+            return udpChannel;
+        }
 
+        public void Dispose()
+        {
+             
+        }
+
+        public IUDPConfig UseDecompressFunc(Func<byte[], int, int, byte[]> decompressFunc)
+        {
+            if (decompressFunc == null)
+            {
+                throw new ArgumentNullException(nameof(decompressFunc));
+            }
+            Context.Set<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Decompress), decompressFunc);
+            return this;
+        }
+
+        public IUDPConfig UseCompressFunc(Func<byte[], int, int, byte[]> compressFunc)
+        {
+            if (compressFunc == null)
+            {
+                throw new ArgumentNullException(nameof(compressFunc));
+            } 
+            Context.Set<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Compress), compressFunc);
             return this;
         }
     }

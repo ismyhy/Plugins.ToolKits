@@ -239,6 +239,9 @@ namespace Plugins.ToolKits
             KeyObjects?.Clear();
         }
 
+        public  string[] AllKey=> KeyObjects?.Select(x => x.Key).ToArray();
+
+
         public bool RemoveKey(string key)
         {
             return KeyObjects.TryRemove(key);

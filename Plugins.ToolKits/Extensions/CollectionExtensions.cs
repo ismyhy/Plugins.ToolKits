@@ -32,6 +32,35 @@ namespace Plugins.ToolKits
             return origin;
         }
 
+
+        public static IEnumerable<T> ForEachIgnore<T,TException>(this IEnumerable<T> origin, Action<T> action, Action<TException> excepionCallback=null)
+        where TException : Exception
+        
+        {
+            if (origin == null || action == null)
+            {
+                return origin;
+            }
+
+            try
+            {
+                using IEnumerator<T> enumerator = origin.GetEnumerator();
+
+                while (enumerator.MoveNext())
+                {
+                    action.Invoke(enumerator.Current);
+                }
+
+            }
+            catch (TException e)
+            {
+                excepionCallback?.Invoke(e);
+            }
+            return origin;
+        }
+
+
+
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> origin, int startIndex, Action<T> action)
         {
             if (origin == null || action == null)

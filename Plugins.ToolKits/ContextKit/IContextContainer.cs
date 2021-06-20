@@ -14,6 +14,7 @@ namespace Plugins.ToolKits
 
         bool RemoveKey(string key);
 
+        string[] AllKey { get; }
 
         TInstance Get<TInstance>();
 

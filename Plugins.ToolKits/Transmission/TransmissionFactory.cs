@@ -9,9 +9,9 @@ namespace Plugins.ToolKits.Transmission
    public sealed class TransmissionFactory
     {
 
-        public static UDPChannel UDPCreate()
+        public static IUDPConfig UDPCreate()
         {
-           return new  Plugins.ToolKits.Transmission.UDP.UDPChannel();
+           return new  Plugins.ToolKits.Transmission.UDP.UDPConfig();
         }
     }
 }

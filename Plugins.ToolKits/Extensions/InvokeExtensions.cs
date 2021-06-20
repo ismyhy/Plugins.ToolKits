@@ -23,6 +23,23 @@ namespace Plugins.ToolKits
                 exceptionCallback?.Invoke(exception);
             }
         }
+        public static void RunIgnoreException(Action action, Action<Exception> exceptionCallback = null) 
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            try
+            {
+                action();
+            }
+            catch ( Exception exception)
+            {
+                exceptionCallback?.Invoke(exception);
+            }
+        }
+
 
         public static void For(int startIndex, int endIndex, Action<int> action)
         {

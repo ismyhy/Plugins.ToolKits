@@ -1,34 +1,31 @@
 ﻿
+using Plugins.ToolKits.Transmission.Protocol;
+using Plugins.ToolKits.Transmission.UDP;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.Transmission
+namespace Plugins.ToolKits.Transmission.UDP
 {
     [DebuggerDisplay("Local:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.LocalIPEndPoint)}   Remote:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.RemoteIPEndPoint)}")]
-    public abstract partial class UDPChannel : IUDPBuilder, IUDPConfig, IUDPChannel
-    {
-
-        public static IUDPConfig Create()
-        {
-            return new Plugins.ToolKits.Transmission.UDP.UDPChannel();
-        }
-
+    internal   partial class UDPChannel :    IUDPChannel
+    { 
         public bool IsRunning { get; private set; }
 
-        protected UDPChannel()
+        internal UDPChannel()
         {
             Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1)); 
             Context.Set<Func<ProtocolPacket,IPEndPoint,int,int>>(UDPChannelKeys.MessageSender, this.PacketSender);
         }
 
 
-        private readonly ContextContainer Context = new ContextContainer();
+        public readonly ContextContainer Context = new ContextContainer();
 
         void IUDPChannel.Close()
         {
@@ -60,7 +57,7 @@ namespace Plugins.ToolKits.Transmission
                 throw new ArgumentNullException(nameof(UDPChannelKeys.RemoteIPEndPoint));
             }
 
-            ProtocolPacket packet = TransmissionAssist.BuildPacket(buffer, offset, length, setting);
+            ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
             packet.RefreshCounter();
             return PacketSender(packet, endPoint, setting?.MillisecondsTimeout ?? -1);
         }
@@ -81,17 +78,17 @@ namespace Plugins.ToolKits.Transmission
 
         #region Run
 
-        IUDPChannel IUDPBuilder.RunAsync()
+        IUDPChannel IUDPChannel.RunAsync()
         {
             if (!Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
             {
                 throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
             }
 
-            ConcurrentDictionary<int, IUDPSession> Sessions = new();
+            ConcurrentDictionary<int, ISession> Sessions = new();
 
             Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
-            Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<IUDPSession, byte[]> receiveFunc);
+            Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<ISession, byte[]> receiveFunc);
             Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list);
 
 
@@ -145,7 +142,7 @@ namespace Plugins.ToolKits.Transmission
                     }
 
                     int key = receivedEndPoint.Address.GetHashCode() ^ receivedEndPoint.Port;
-                    IUDPSession session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
+                    ISession session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
                     {
                         RemoteEndPoint = receivedEndPoint
                     });
@@ -225,26 +222,5 @@ namespace Plugins.ToolKits.Transmission
         #endregion
 
     }
-
-
-    public class PacketSetting
-    {
-        public int MillisecondsTimeout { get; set; } = -1;
-
-        public bool ReportArrived { get; set; }
-
-        public bool Compress { get; set; }
-
-        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
-    }
-
-
-    internal class UdpClient : System.Net.Sockets.UdpClient
-    {
-        public UdpClient(IPEndPoint localEP) : base(localEP)
-        {
-        }
-
-        public bool IsActive => base.Active;
-    }
+     
 }
