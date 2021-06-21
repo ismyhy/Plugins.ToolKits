@@ -26,7 +26,7 @@ namespace Plugins.ToolKits.Transmission.UDP
         }
 
         public IPEndPoint RemoteEndPoint { get; internal set; }
-
+ 
         public void Dispose()
         {
             Context = null;
@@ -38,7 +38,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             var isCompress = setting?.IsCompressBuffer ?? false;
             if (isCompress)
             {
-                var exist = Context.TryGet(UDPChannelKeys.RemoteIPEndPoint, out Func<byte[], int, int, byte[]> func);
+                var exist = Context.TryGet(TransmissionKeys.RemoteIPEndPoint, out Func<byte[], int, int, byte[]> func);
                 if (exist)
                 {
                     buffer = func(buffer, offset, length);
@@ -50,7 +50,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
             packet.RefreshCounter();
 
-            var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender);
+            var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, int, int>>(TransmissionKeys.MessageSender);
              
             int sendCount = sender(packet, RemoteEndPoint, setting?.MillisecondsTimeout ?? -1); 
 

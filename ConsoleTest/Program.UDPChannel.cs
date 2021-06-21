@@ -2,6 +2,7 @@
 using Plugins.ToolKits.Transmission;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -62,17 +63,17 @@ namespace ConsoleTest
             int serverIndex = 0;
             int clientIndex = 0;
             IPAddress ip = IPAddress.Parse("127.0.0.1");
-            var serverPoart = TransmissionAssist.GetAvailablePort();
+            var ports = TransmissionAssist.GetAvailablePort(2);
 
             var setting = new PacketSetting()
             {
                 ReportArrived = false,
             };
-            var serverEndPoint=new IPEndPoint(ip, serverPoart);
-            var channel = new Program1(new IPEndPoint(ip, TransmissionAssist.GetAvailablePort()) );
+            var serverEndPoint=new IPEndPoint(ip, ports.First());
+            var channel = new Program1(serverEndPoint);
             channel.RunAsync();
 
-            var channel2 = new Program2(new IPEndPoint(ip, TransmissionAssist.GetAvailablePort()), serverEndPoint);
+            var channel2 = new Program2(new IPEndPoint(ip, ports.Last()), serverEndPoint);
 
             channel2.RunAsync();
 

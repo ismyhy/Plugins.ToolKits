@@ -26,8 +26,8 @@ namespace Plugins.ToolKits.Transmission
                 throw new ArgumentNullException(nameof(localEndPoint));
             }
             Client = new UdpClient(localEndPoint);
-            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1));
-            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender, PacketSender);
+            Context.Set(TransmissionKeys.Semaphore, new Semaphore(1, 1));
+            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(TransmissionKeys.MessageSender, PacketSender);
         }
 
 
@@ -43,9 +43,9 @@ namespace Plugins.ToolKits.Transmission
             }
 
             Client = new UdpClient(localEndPoint);
-            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1));
-            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender, PacketSender);
-            Context.Set(UDPChannelKeys.RemoteIPEndPoint, remoteEndPoint);
+            Context.Set(TransmissionKeys.Semaphore, new Semaphore(1, 1));
+            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(TransmissionKeys.MessageSender, PacketSender);
+            Context.Set(TransmissionKeys.RemoteIPEndPoint, remoteEndPoint);
 
         }
 
@@ -58,10 +58,10 @@ namespace Plugins.ToolKits.Transmission
         {
             IsRunning = false;
 
-            if (Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
+            if (Context.TryGet<UdpClient>(TransmissionKeys.UdpClient, out UdpClient udpClient))
             {
                 udpClient?.Close();
-                Context.RemoveKey(UDPChannelKeys.UdpClient);
+                Context.RemoveKey(TransmissionKeys.UdpClient);
             }
             Context.ToObjectCollection().OfType<IDisposable>().ForEach(c => Invoker.RunIgnore<Exception>(c.Dispose));
             Context?.Dispose();
@@ -74,9 +74,9 @@ namespace Plugins.ToolKits.Transmission
 
         public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
         {
-            if (!Context.TryGet(UDPChannelKeys.RemoteIPEndPoint, out IPEndPoint endPoint))
+            if (!Context.TryGet(TransmissionKeys.RemoteIPEndPoint, out IPEndPoint endPoint))
             {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.RemoteIPEndPoint));
+                throw new ArgumentNullException(nameof(TransmissionKeys.RemoteIPEndPoint));
             }
 
             ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
@@ -100,7 +100,7 @@ namespace Plugins.ToolKits.Transmission
 
             ConcurrentDictionary<int, ISession> Sessions = new();
 
-            Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list);
+            Context.TryGet<List<IPAddress>>(TransmissionKeys.JoinMulticastGroup, out List<IPAddress> list);
 
             list?.ForEach(x => Client.JoinMulticastGroup(x));
 
@@ -166,8 +166,8 @@ namespace Plugins.ToolKits.Transmission
  
         protected virtual void Recived(ISession session, byte[] buffer)
         {
-            Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
-            Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<ISession, byte[]> receiveFunc);
+            Context.TryGet<bool>(TransmissionKeys.AsynchronousExecutionCallback, out bool acceptAsync);
+            Context.TryGet(TransmissionKeys.ReceiveFunc, out Action<ISession, byte[]> receiveFunc);
             if (acceptAsync)
             {
                 Task.Factory.StartNew(() =>
@@ -184,9 +184,9 @@ namespace Plugins.ToolKits.Transmission
         internal int PacketSender(ProtocolPacket packet, IPEndPoint remoteEndPoint, int millisecondsTimeout = -1)
         {
   
-            if (!Context.TryGet<Semaphore>(UDPChannelKeys.Semaphore, out Semaphore semaphore))
+            if (!Context.TryGet<Semaphore>(TransmissionKeys.Semaphore, out Semaphore semaphore))
             {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.Semaphore));
+                throw new ArgumentNullException(nameof(TransmissionKeys.Semaphore));
             }
 
             EventWaitHandle awaiter = null;
@@ -229,14 +229,14 @@ namespace Plugins.ToolKits.Transmission
 
         public virtual byte[] DecompressBuffer(byte[] buffer, int offset, int length)
         {
-            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Decompress));
+            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(TransmissionKeys.Decompress));
 
             return func(buffer, offset, length);
         }
 
         public virtual byte[] CompressBuffer(byte[] buffer, int offset, int length)
         {
-            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Compress));
+            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(TransmissionKeys.Compress));
 
             return func(buffer, offset, length);
         }

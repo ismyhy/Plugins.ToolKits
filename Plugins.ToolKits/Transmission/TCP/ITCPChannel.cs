@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Plugins.ToolKits.Transmission.TCP
 {
-
-
     public interface ITCPChannel
     {
         ITCPChannel RunAsync();
@@ -21,73 +16,77 @@ namespace Plugins.ToolKits.Transmission.TCP
         void Close();
     }
 
-    //internal class TCPChannel : ITCPChannel
-    //{
-    //    public readonly ContextContainer Context = new ContextContainer();
+    public class TCPChannel
+    {
+        public readonly ContextContainer Context = new ContextContainer();
+        public TcpClient TcpClient { get; private set; }
+        public TCPChannel(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint)
+        {
+            if (localEndPoint == null)
+            {
+                throw new ArgumentNullException(nameof(localEndPoint));
+            }
 
-    //    public TCPChannel()
-    //    {
+            if (remoteEndPoint == null)
+            {
+                throw new ArgumentNullException(nameof(remoteEndPoint));
+            }
+            Context.Set(TransmissionKeys.RemoteIPEndPoint, remoteEndPoint);
+            TcpClient = new TcpClient(localEndPoint);
+        }
 
-    //    }
 
-    //    public void Close()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        #region Base
 
-    //    public ITCPChannel RunAsync()
-    //    {
-    //        if (!Context.TryGet<IPEndPoint>(TCPConfigKeys.RemoteIPEndPoint, out var remoteIpPoint))
-    //        {
-    //            throw new Exception("The correct remote port is not configured");
-    //        }
+        public int SendTimeout
+        {
+            get => TcpClient.SendTimeout;
+            set => TcpClient.SendTimeout = value;
+        }
 
-    //        if (!Context.TryGet<TcpClient>(TCPConfigKeys.TcpClient, out var tcpClient))
-    //        {
-    //            throw new Exception("The correct remote port is not configured");
-    //        }
-    //        tcpClient.Connect(remoteIpPoint);
+        public int ReceiveTimeout
+        {
+            get => TcpClient.ReceiveTimeout;
+            set => TcpClient.ReceiveTimeout = value;
+        }
+        public int SendBufferSize
+        {
+            get => TcpClient.SendBufferSize;
+            set => TcpClient.SendBufferSize = value;
+        }
 
-    //        var buffer = new byte[1024 * 1024 * 32];
+        public int ReceiveBufferSize
+        {
+            get => TcpClient.ReceiveBufferSize;
+            set => TcpClient.ReceiveBufferSize = value;
+        }
 
-    //        NetworkStream stream = tcpClient.GetStream();
-    //        stream.BeginRead(buffer, 0, buffer.Length, HandleDataReceived, stream);
+        public bool ExclusiveAddressUse
+        {
+            get => TcpClient.ExclusiveAddressUse;
+            set => TcpClient.ExclusiveAddressUse = value;
+        }
 
-    //        return this;
+        public bool Connected => TcpClient.Connected;
+        public LingerOption LingerState
+        {
+            get => TcpClient.LingerState;
+            set => TcpClient.LingerState = value;
+        }
 
-    //        void HandleDataReceived(IAsyncResult ar)
-    //        {
-    //            NetworkStream stream1 = (NetworkStream)ar.AsyncState;
-    //            int receivedLength;
-    //            try
-    //            {
-    //                receivedLength = stream1.EndRead(ar);
-    //                _easyBase.ReceivedHandler(_bufferPool, 0, receivedLength);
-    //                stream1.BeginRead(buffer, 0, buffer.Length, HandleDataReceived, stream1);
-    //            }
-    //            catch
-    //            {
-    //                receivedLength = 0;
-    //            }
-
-    //            if (receivedLength == 0)
-    //            {
-    //                _removeAction?.Invoke(this);
-    //            }
-    //        }
-
-    //    }
-
-    //    public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+        public bool NoDelay
+        {
+            get => TcpClient.NoDelay;
+            set => TcpClient.NoDelay = value;
+        }
+         
+        public void Connect()
+        { 
+            IPEndPoint remoteEndPoint = Context.Get<IPEndPoint>(TransmissionKeys.RemoteIPEndPoint);
+            TcpClient.Connect(remoteEndPoint);
+        }
+        #endregion
+    }
 
 
 
