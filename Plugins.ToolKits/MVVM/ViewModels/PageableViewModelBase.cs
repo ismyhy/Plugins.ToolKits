@@ -49,65 +49,65 @@ namespace Plugins.ToolKits.MVVM
             get => _isSearching;
             set => SetProperty(ref _isSearching, value);
         }
-        public ICommand SearchCommand => (ExecuteExclusive(async (exclusiveContext) =>
-     {
-         exclusiveContext.BeginExclusive();
-         try
-         {
-             if (IsSearching)
-             {
-                 return;
-             }
+        public ICommand SearchCommand => ExecuteExclusiveCommand(async (exclusiveContext) =>
+    {
+        exclusiveContext.BeginExclusive();
+        try
+        {
+            if (IsSearching)
+            {
+                return;
+            }
 
-             IsSearching = true;
-             string search = SearchKeyword;
-             if (_oldSearchWord != search)
-             {
-                 CurrentPage = 1;
-             }
+            IsSearching = true;
+            string search = SearchKeyword;
+            if (_oldSearchWord != search)
+            {
+                CurrentPage = 1;
+            }
 
-             int totalCount = await Search(search, CurrentPage, PageSize);
+            int totalCount = await Search(search, CurrentPage, PageSize);
 
-             TotalPage = (int)Math.Ceiling((double)totalCount / PageSize);
+            TotalPage = (int)Math.Ceiling((double)totalCount / PageSize);
 
-             _oldSearchWord = search;
-         }
-         finally
-         {
-             IsSearching = false;
-             exclusiveContext.EndExclusive();
-         }
-     }));
-
-
-        public ICommand GotoCommand => (ExecuteExclusive((context) =>
-       {
-           try
-           {
-               context.BeginExclusive();
-               if (TargetPage > TotalPage || CurrentPage == TargetPage)
-               {
-                   return;
-               }
-
-               if (TargetPage < 1 || CurrentPage == 1)
-               {
-                   return;
-               }
-
-               CurrentPage = TargetPage;
-
-               Search(SearchKeyword, CurrentPage, PageSize);
-           }
-           finally
-           {
-               context.EndExclusive();
-           }
+            _oldSearchWord = search;
+        }
+        finally
+        {
+            IsSearching = false;
+            exclusiveContext.EndExclusive();
+        }
+    });
 
 
-       }));
+        public ICommand GotoCommand => ExecuteExclusiveCommand((context) =>
+      {
+          try
+          {
+              context.BeginExclusive();
+              if (TargetPage > TotalPage || CurrentPage == TargetPage)
+              {
+                  return;
+              }
 
-        public ICommand FirstPageCommand => (ExecuteExclusive((context) =>
+              if (TargetPage < 1 || CurrentPage == 1)
+              {
+                  return;
+              }
+
+              CurrentPage = TargetPage;
+
+              Search(SearchKeyword, CurrentPage, PageSize);
+          }
+          finally
+          {
+              context.EndExclusive();
+          }
+
+
+      });
+
+        public ICommand FirstPageCommand => (ExecuteExclusiveCommand((context) =>
        {
            try
            {
@@ -122,7 +122,7 @@ namespace Plugins.ToolKits.MVVM
 
        }));
 
-        public ICommand PreviousPageCommand => ExecuteExclusive((context) =>
+        public ICommand PreviousPageCommand => ExecuteExclusiveCommand((context) =>
       {
           try
           {
@@ -143,7 +143,7 @@ namespace Plugins.ToolKits.MVVM
 
       });
 
-        public ICommand LastPageCommand => (ExecuteExclusive((context) =>
+        public ICommand LastPageCommand => (ExecuteExclusiveCommand((context) =>
       {
           try
           {
@@ -159,7 +159,7 @@ namespace Plugins.ToolKits.MVVM
 
       }));
 
-        public ICommand NextPageCommand => (ExecuteExclusive((context) =>
+        public ICommand NextPageCommand => (ExecuteExclusiveCommand((context) =>
        {
 
            try

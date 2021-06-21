@@ -7,6 +7,50 @@ using System.Text;
 
 namespace ConsoleTest
 {
+
+    public class Program1 : UDPChannel
+    {
+        PacketSetting setting = new PacketSetting()
+        {
+            ReportArrived = false,
+        };
+        int serverIndex = 0;
+        public Program1(IPEndPoint localPoint) : base(localPoint)
+        {
+
+        } 
+        protected override void Recived(ISession session, byte[] dataBuffer)
+        {
+            string message = Encoding.UTF8.GetString(dataBuffer);
+            if (serverIndex % 100 == 0)
+                Console.WriteLine(message + "   " + session.GetHashCode());
+            byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
+            session.SendAsync(buffer2, 0, buffer2.Length, setting);
+        } 
+    }
+
+    public class Program2 : UDPChannel
+    {
+        PacketSetting setting = new PacketSetting()
+        {
+            ReportArrived = false,
+        };
+        int clientIndex = 0;
+        public Program2(IPEndPoint localPoint, IPEndPoint remotePoint) : base(localPoint, remotePoint)
+        {
+
+        }
+        protected override void Recived(ISession session, byte[] dataBuffer)
+        {
+            string message = Encoding.UTF8.GetString(dataBuffer);
+
+            if (clientIndex % 100 == 0)
+                Console.WriteLine(message + "   " + session.GetHashCode());
+
+            byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+            session.SendAsync(buffer2, 0, buffer2.Length, setting);
+        }
+    }
     internal partial class Program
     { 
 
@@ -24,37 +68,44 @@ namespace ConsoleTest
             {
                 ReportArrived = false,
             };
+            var serverEndPoint=new IPEndPoint(ip, serverPoart);
+            var channel = new Program1(new IPEndPoint(ip, TransmissionAssist.GetAvailablePort()) );
+            channel.RunAsync();
 
-            IUDPChannel channel = TransmissionFactory.UDPCreate()
-                .UseAsynchronousExecutionCallback(true)
-              .UseReceiveCallback((session, buffer) =>
-              {
-                  string message = Encoding.UTF8.GetString(buffer);
-                  if (serverIndex % 100 == 0)
-                      Console.WriteLine(message + "   " + session.GetHashCode());
-                  byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
-                  session.SendAsync(buffer2, 0, buffer2.Length, setting);
+            var channel2 = new Program2(new IPEndPoint(ip, TransmissionAssist.GetAvailablePort()), serverEndPoint);
 
-              })
-              .UseLocalIPEndPoint(ip, serverPoart)
-              .Build()
-              .RunAsync();
+            channel2.RunAsync();
 
-            IUDPChannel channel2 = TransmissionFactory.UDPCreate()
-                .UseAsynchronousExecutionCallback(true)
-              .UseReceiveCallback((session, buffer) =>
-              {
-                  string message = Encoding.UTF8.GetString(buffer);
+            //IUDPChannel channel = TransmissionFactory.UDPCreate()
+            //    .UseAsynchronousExecutionCallback(true)
+            //  .UseReceiveCallback((session, buffer) =>
+            //  {
+            //      string message = Encoding.UTF8.GetString(buffer);
+            //      if (serverIndex % 100 == 0)
+            //          Console.WriteLine(message + "   " + session.GetHashCode());
+            //      byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
+            //      session.SendAsync(buffer2, 0, buffer2.Length, setting);
 
-                  if (clientIndex % 100 == 0)
-                      Console.WriteLine(message + "   " + session.GetHashCode());
- 
-                  byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
-                  session.SendAsync(buffer2, 0, buffer2.Length, setting);
-              })
-              .UseRemoteIPEndPoint(ip, serverPoart)
-              .Build()
-              .RunAsync();
+            //  })
+            //  .UseLocalIPEndPoint(ip, serverPoart)
+            //  .Build()
+            //  .RunAsync();
+
+            //IUDPChannel channel2 = TransmissionFactory.UDPCreate()
+            //    .UseAsynchronousExecutionCallback(true)
+            //  .UseReceiveCallback((session, buffer) =>
+            //  {
+            //      string message = Encoding.UTF8.GetString(buffer);
+
+            //      if (clientIndex % 100 == 0)
+            //          Console.WriteLine(message + "   " + session.GetHashCode());
+
+            //      byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+            //      session.SendAsync(buffer2, 0, buffer2.Length, setting);
+            //  })
+            //  .UseRemoteIPEndPoint(ip, serverPoart)
+            //  .Build()
+            //  .RunAsync();
 
             Invoker.For(0, 1, () =>
             {

@@ -13,12 +13,9 @@ namespace Plugins.ToolKits.Transmission
         IUDPConfig UseJoinMulticastGroup(IPAddress iPAddress);
         IUDPConfig UseAsynchronousExecutionCallback(bool asynchronousExecutionCallback);
         IUDPConfig UseLocalIPEndPoint(IPAddress localIp, int localPort);
-        IUDPConfig UseRemoteIPEndPoint(IPAddress remoteIp, int remotePort);
-         
-        IUDPConfig UseDecompressFunc(Func<byte[],int,int,byte[]> decompressFunc);
-         
-        IUDPConfig UseCompressFunc(Func<byte[], int, int, byte[]> compressFunc);
-         
+        IUDPConfig UseRemoteIPEndPoint(IPAddress remoteIp, int remotePort); 
+        IUDPConfig UseDecompressFunc(Func<byte[],int,int,byte[]> decompressFunc); 
+        IUDPConfig UseCompressFunc(Func<byte[], int, int, byte[]> compressFunc); 
         IUDPChannel Build();
     }
 }

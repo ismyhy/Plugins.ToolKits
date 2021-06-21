@@ -89,6 +89,12 @@ namespace Plugins.ToolKits.Transmission.UDP
             {
                 throw new ArgumentNullException(nameof(localIp));
             }
+
+            if(localPort <= 0)
+            {
+                throw new ArgumentException(nameof(localPort));
+            }
+
             Context.Set(UDPChannelKeys.LocalIPEndPoint, new IPEndPoint(localIp, localPort));
             return this;
         }
@@ -98,6 +104,12 @@ namespace Plugins.ToolKits.Transmission.UDP
             {
                 throw new ArgumentNullException(nameof(remoteIp));
             }
+
+            if (remotePort <= 0)
+            {
+                throw new ArgumentException(nameof(remotePort));
+            }
+
             Context.Set(UDPChannelKeys.RemoteIPEndPoint, new IPEndPoint(remoteIp, remotePort));
             return this;
         }
@@ -115,19 +127,16 @@ namespace Plugins.ToolKits.Transmission.UDP
                 endPoint = new IPEndPoint(IPAddress.Any, TransmissionAssist.GetAvailablePort());
             }
 
-            UdpClient udpClient = new UdpClient(endPoint);
+            UDPChannel udpChannel = new Plugins.ToolKits.Transmission.UDP.UDPChannel(endPoint);
 
             var type = typeof(UdpClient);
             foreach (var item in Context.AllKey)
-            {
-                var targetValue= Context.Get<object>(item);
-                type.GetProperty(item)?.SetValue(udpClient, targetValue);
-            }
-              
-            var udpChannel = new UDPChannel();
+            { 
+                type.GetProperty(item)?.SetValue(udpChannel, Context.Get<object>(item));
+            } 
             Context.CopyTo(udpChannel.Context);
-            udpChannel.Context.Set(UDPChannelKeys.UdpClient, udpClient);
 
+            udpChannel.Context.Set(UDPChannelKeys.UDPChannel, udpChannel); 
             return udpChannel;
         }
 

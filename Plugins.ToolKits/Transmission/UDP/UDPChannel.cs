@@ -11,23 +11,45 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.Transmission.UDP
+namespace Plugins.ToolKits.Transmission
 {
     [DebuggerDisplay("Local:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.LocalIPEndPoint)}   Remote:{Context.Get<System.Net.IPEndPoint>(UDPChannelKeys.RemoteIPEndPoint)}")]
-    internal   partial class UDPChannel :    IUDPChannel
-    { 
+    public abstract partial class UDPChannel : IUDPChannel
+    {
         public bool IsRunning { get; private set; }
+        public readonly ContextContainer Context = new ContextContainer();
 
-        internal UDPChannel()
+        protected UDPChannel(IPEndPoint localEndPoint)
         {
-            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1)); 
-            Context.Set<Func<ProtocolPacket,IPEndPoint,int,int>>(UDPChannelKeys.MessageSender, this.PacketSender);
+            if (localEndPoint == null)
+            {
+                throw new ArgumentNullException(nameof(localEndPoint));
+            }
+            Client = new UdpClient(localEndPoint);
+            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1));
+            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender, PacketSender);
         }
 
 
-        public readonly ContextContainer Context = new ContextContainer();
+        protected UDPChannel(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint)
+        {
+            if(localEndPoint == null)
+            {
+                throw new ArgumentNullException(nameof(localEndPoint));
+            }
+            if (remoteEndPoint == null)
+            {
+                throw new ArgumentNullException(nameof(remoteEndPoint));
+            }
 
-        void IUDPChannel.Close()
+            Client = new UdpClient(localEndPoint);
+            Context.Set(UDPChannelKeys.Semaphore, new Semaphore(1, 1));
+            Context.Set<Func<ProtocolPacket, IPEndPoint, int, int>>(UDPChannelKeys.MessageSender, PacketSender);
+            Context.Set(UDPChannelKeys.RemoteIPEndPoint, remoteEndPoint);
+
+        }
+
+        public void Close()
         {
             Dispose();
         }
@@ -39,7 +61,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             if (Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
             {
                 udpClient?.Close();
-                Context.RemoveKey(UDPChannelKeys.UdpClient); 
+                Context.RemoveKey(UDPChannelKeys.UdpClient);
             }
             Context.ToObjectCollection().OfType<IDisposable>().ForEach(c => Invoker.RunIgnore<Exception>(c.Dispose));
             Context?.Dispose();
@@ -50,7 +72,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             Dispose();
         }
 
-        int IUDPChannel.Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
+        public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
         {
             if (!Context.TryGet(UDPChannelKeys.RemoteIPEndPoint, out IPEndPoint endPoint))
             {
@@ -62,9 +84,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             return PacketSender(packet, endPoint, setting?.MillisecondsTimeout ?? -1);
         }
 
-
-
-        Task<int> IUDPChannel.SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null)
+        public Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null)
         {
             CancellationToken token = setting?.CancellationToken ?? CancellationToken.None;
             return Task.Factory.StartNew(() =>
@@ -73,31 +93,20 @@ namespace Plugins.ToolKits.Transmission.UDP
             }, token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
 
-
-
-
         #region Run
 
-        IUDPChannel IUDPChannel.RunAsync()
+        public IUDPChannel RunAsync()
         {
-            if (!Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
-            {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
-            }
 
             ConcurrentDictionary<int, ISession> Sessions = new();
 
-            Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
-            Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<ISession, byte[]> receiveFunc);
             Context.TryGet<List<IPAddress>>(UDPChannelKeys.JoinMulticastGroup, out List<IPAddress> list);
 
-
-
-            list?.ForEach(x => udpClient.JoinMulticastGroup(x));
+            list?.ForEach(x => Client.JoinMulticastGroup(x));
 
             IsRunning = true;
 
-            udpClient.BeginReceive(ReceiveCallback, udpClient);
+            Client.BeginReceive(ReceiveCallback, Client);
 
             return this;
 
@@ -142,40 +151,39 @@ namespace Plugins.ToolKits.Transmission.UDP
                     }
 
                     int key = receivedEndPoint.Address.GetHashCode() ^ receivedEndPoint.Port;
-                    ISession session = Sessions.GetOrAdd(key, i => new UDPSession(Context)
+
+                    Recived(Sessions.GetOrAdd(key, i => new UDPSession(Context)
                     {
                         RemoteEndPoint = receivedEndPoint
-                    });
+                    }), dataBuffer);
 
-                    if (acceptAsync)
-                    {
-                        Task.Factory.StartNew(() =>
-                        {
-                            receiveFunc?.Invoke(session, dataBuffer);
-                        }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
-                    }
-                    else
-                    {
-                        receiveFunc?.Invoke(session, dataBuffer);
-                    }
                     return;
 
                 }
-
-                Invoker.RunIgnore<Exception>(() => udpClient.BeginReceive(ReceiveCallback, udpClient));
-
+                udpClient.BeginReceive(ReceiveCallback, udpClient);
+            }
+        }
+ 
+        protected virtual void Recived(ISession session, byte[] buffer)
+        {
+            Context.TryGet<bool>(UDPChannelKeys.AsynchronousExecutionCallback, out bool acceptAsync);
+            Context.TryGet(UDPChannelKeys.ReceiveFunc, out Action<ISession, byte[]> receiveFunc);
+            if (acceptAsync)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    receiveFunc?.Invoke(session, buffer);
+                }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+            }
+            else
+            {
+                receiveFunc?.Invoke(session, buffer);
             }
         }
 
-
         internal int PacketSender(ProtocolPacket packet, IPEndPoint remoteEndPoint, int millisecondsTimeout = -1)
         {
-
-            if (!Context.TryGet<UdpClient>(UDPChannelKeys.UdpClient, out UdpClient udpClient))
-            {
-                throw new ArgumentNullException(nameof(UDPChannelKeys.UdpClient));
-            }
-
+  
             if (!Context.TryGet<Semaphore>(UDPChannelKeys.Semaphore, out Semaphore semaphore))
             {
                 throw new ArgumentNullException(nameof(UDPChannelKeys.Semaphore));
@@ -194,7 +202,7 @@ namespace Plugins.ToolKits.Transmission.UDP
             int sendCount;
             try
             {
-                sendCount = udpClient.Send(buffer, buffer.Length, remoteEndPoint);
+                sendCount =  Client.Send(buffer, buffer.Length, remoteEndPoint);
             }
             catch (Exception)
             {
@@ -213,14 +221,94 @@ namespace Plugins.ToolKits.Transmission.UDP
             return sendCount;
         }
 
-
-
         private readonly IDictionary<long, EventWaitHandle> SyncHandles = new ConcurrentDictionary<long, EventWaitHandle>();
-
-
 
         #endregion
 
+        #region
+
+        public virtual byte[] DecompressBuffer(byte[] buffer, int offset, int length)
+        {
+            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Decompress));
+
+            return func(buffer, offset, length);
+        }
+
+        public virtual byte[] CompressBuffer(byte[] buffer, int offset, int length)
+        {
+            Func<byte[], int, int, byte[]> func = Context.Get<Func<byte[], int, int, byte[]>>(nameof(UDPChannelKeys.Compress));
+
+            return func(buffer, offset, length);
+        }
+
+        #endregion
+
+
+        #region  Base
+
+        public bool MulticastLoopback
+        {
+            get => Client.MulticastLoopback;
+            set => Client.MulticastLoopback = value;
+        }
+
+        public bool DontFragment
+        {
+            get => Client.DontFragment;
+            set => Client.DontFragment = value;
+        }
+        public short Ttl
+        {
+            get => Client.Ttl;
+            set => Client.Ttl = value;
+        }
+        public bool EnableBroadcast
+        {
+            get => Client.EnableBroadcast;
+            set => Client.EnableBroadcast = value;
+        }
+        public bool ExclusiveAddressUse
+        {
+            get => Client.ExclusiveAddressUse;
+            set => Client.ExclusiveAddressUse = value;
+        }
+        public UdpClient Client { get; private set; }
+
+        public void Connect(IPEndPoint endPoint)
+        {
+            Client.Connect(endPoint);
+        }
+
+        public void JoinMulticastGroup(IPAddress multicastAddr, int timeToLive)
+        {
+            Client.JoinMulticastGroup(multicastAddr, timeToLive);
+        }
+        public void JoinMulticastGroup(IPAddress multicastAddr, IPAddress localAddress)
+        {
+            Client.JoinMulticastGroup(multicastAddr, localAddress);
+        }
+        public void JoinMulticastGroup(IPAddress multicastAddr)
+        {
+            Client.JoinMulticastGroup(multicastAddr);
+        }
+        public void JoinMulticastGroup(int ifindex, IPAddress multicastAddr)
+        {
+            Client.JoinMulticastGroup(ifindex, multicastAddr);
+        }
+        public void DropMulticastGroup(IPAddress multicastAddr, int ifindex)
+        {
+            Client.DropMulticastGroup(multicastAddr, ifindex);
+        }
+        public void DropMulticastGroup(IPAddress multicastAddr)
+        {
+            Client.DropMulticastGroup(multicastAddr);
+        }
+        public void AllowNatTraversal(bool allowed)
+        {
+            Client.AllowNatTraversal(allowed);
+        }
+        #endregion
+
     }
-     
+
 }

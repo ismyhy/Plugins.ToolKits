@@ -7,6 +7,15 @@ using System.Threading;
 using System.Threading.Tasks;
 namespace Plugins.ToolKits.Transmission.UDP
 {
+    internal class UDPChannel : Plugins.ToolKits.Transmission.UDPChannel
+    {
+        internal UDPChannel(IPEndPoint localPoint) : base(localPoint)
+        {
+
+        }
+    }
+
+
     [DebuggerDisplay("{RemoteEndPoint}")]
     internal class UDPSession : ISession
     {

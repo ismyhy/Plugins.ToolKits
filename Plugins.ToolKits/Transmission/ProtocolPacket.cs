@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -108,6 +109,35 @@ namespace Plugins.ToolKits.Transmission.Protocol
                 IsCompress = setting?.IsCompressBuffer ?? false,
                 ReportArrived = setting?.ReportArrived ?? false,
             };
+        }
+
+        internal static ICollection<ProtocolPacket> FromBuffers(byte[] buffer, int offset, int bufferLength)
+        {
+            List<ProtocolPacket> list = new List<ProtocolPacket>();
+            do
+            {
+                int packetLength = BitConverter.ToInt32(buffer, offset);
+
+                if (packetLength == 0 || packetLength > buffer.Length - offset)
+                {
+                    break;
+                }
+
+                int currentLength = offset + packetLength;
+
+                if (currentLength <= bufferLength)
+                {
+                    ProtocolPacket pp = FromBuffer(buffer, offset, buffer.Length);
+                    list.Add(pp);
+
+                    offset = currentLength;
+                    continue;
+                }
+
+                break;
+            } while (buffer.Length > offset + sizeof(int));
+
+            return list;
         }
 
 
