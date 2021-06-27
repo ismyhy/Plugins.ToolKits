@@ -33,128 +33,79 @@ namespace Plugins.ToolKits
         }
 
 
-        public static IEnumerable<T> ForEachIgnore<T,TException>(this IEnumerable<T> origin, Action<T> action, Action<TException> excepionCallback=null)
+        public static IEnumerable<T> ForEachIgnore<T, TException>(this IEnumerable<T> origin, Action<T> action, Action<TException> excepionCallback = null)
         where TException : Exception
-        
+
         {
             if (origin == null || action == null)
             {
                 return origin;
             }
 
-            try
-            {
-                using IEnumerator<T> enumerator = origin.GetEnumerator();
+            using IEnumerator<T> enumerator = origin.GetEnumerator();
 
-                while (enumerator.MoveNext())
+            while (enumerator.MoveNext())
+            {
+                try
                 {
                     action.Invoke(enumerator.Current);
                 }
-
-            }
-            catch (TException e)
-            {
-                excepionCallback?.Invoke(e);
-            }
-            return origin;
-        }
-
-
-
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> origin, int startIndex, Action<T> action)
-        {
-            if (origin == null || action == null)
-            {
-                return origin;
+                catch (TException e)
+                {
+                    excepionCallback?.Invoke(e);
+                }
             }
 
-            int num = startIndex;
-            if (startIndex < 0 || startIndex >= origin.Count())
-            {
-                throw new IndexOutOfRangeException($"{nameof(startIndex)}:{startIndex}");
-            }
-
-
-            foreach (T arg in origin.Skip(startIndex))
-            {
-                action.Invoke(arg);
-                num++;
-            }
 
             return origin;
         }
-
-
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> origin, int startIndex, Action<T, int> action)
-        {
-
-            if (origin == null || action == null)
-            {
-                return origin;
-            }
-
-            int num = startIndex;
-            if (startIndex < 0 || startIndex >= origin.Count())
-            {
-                throw new IndexOutOfRangeException($"{nameof(startIndex)}:{startIndex}");
-            }
-
-
-            foreach (T arg in origin.Skip(startIndex))
-            {
-                action.Invoke(arg, num);
-                num++;
-            }
-
-            return origin;
-        }
-
 
         public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> origin)
         {
+            if (origin is null)
+            {
+                throw new ArgumentNullException(nameof(origin));
+            }
             ObservableCollection<T> observableCollection = new ObservableCollection<T>();
 
-            if (origin == null)
-            {
-                return observableCollection;
-            }
 
-            foreach (T item in origin)
-            {
-                observableCollection.Add(item);
-            }
+            using IEnumerator<T> enumerator = origin.GetEnumerator();
 
+            while (enumerator.MoveNext())
+            {
+                observableCollection.Add(enumerator.Current); 
+            }
+             
             return observableCollection;
         }
 
         public static ICollection<T> AddItems<T>(this ICollection<T> origin, IEnumerable<T> target)
         {
+            if (origin is null)
+            {
+                throw new ArgumentNullException(nameof(origin));
+            }
             if (target is null)
             {
                 return origin;
             }
 
+            using IEnumerator<T> enumerator = target.GetEnumerator();
 
-            origin ??= new List<T>();
-
-            foreach (T item in target)
+            while (enumerator.MoveNext())
             {
-                origin.Add(item);
+                origin.Add(enumerator.Current);
             }
-
+            
             return origin;
         }
 
         public static ICollection<T> AddItems<T>(this ICollection<T> origin, params T[] @params)
         {
-            if ((@params?.Length ?? 0) == 0)
+            if (origin is null)
             {
-                return origin;
+                throw new ArgumentNullException(nameof(origin));
             }
-
-
-            origin ??= new List<T>();
-
 
             foreach (T item in @params)
             {
@@ -238,41 +189,6 @@ namespace Plugins.ToolKits
             list.AddRange(concats);
             return list;
         }
-
-
-        //public static IDictionary<TKey, TValue> With<TKey, TValue>(TKey key, TValue value)
-        //{
-        //    if (key is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(key), $"{nameof(key)} is Null");
-        //    }
-
-        //    Dictionary<TKey, TValue> kv = new Dictionary<TKey, TValue>
-        //    {
-        //        [key] = value
-        //    };
-        //    return kv;
-        //}
-
-
-        //public static IDictionary<TKey, TValue> Add<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key,
-        //    TValue value)
-        //{
-        //    if (dictionary is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(dictionary), $"{nameof(dictionary)} is Null");
-        //    }
-
-        //    if (key is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(key), $"{nameof(key)} is Null");
-        //    }
-
-        //    dictionary[key] = value;
-
-        //    return dictionary;
-        //}
-
 
         public static TValue TryGetValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key,
             Func<TValue> funcValue)

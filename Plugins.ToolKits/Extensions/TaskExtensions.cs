@@ -21,91 +21,7 @@ namespace Plugins.ToolKits
         public static void NoAwaiter<TType>([NotNull] this Task<TType> task)
         {
         }
-
-        public static Task LongRun([NotNull] Action action)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            return Task.Factory.StartNew(() =>
-                {
-                    Thread.CurrentThread.IsBackground = true;
-                    action?.Invoke();
-                }, CancellationToken.None, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
-        }
-
-        public static Task LongRun<TResult>([NotNull] Func<TResult> action)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-            return Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
-        }
-
-        public static Task InvokeAsync([NotNull] this Action action,
-            TaskCreationOptions creationOptions = TaskCreationOptions.DenyChildAttach)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            return Task.Factory.StartNew(action, CancellationToken.None, creationOptions,
-                TaskScheduler.Default);
-        }
-
-
-        public static Task<TResult> InvokeAsync<TResult>([NotNull] this Func<TResult> action,
-            TaskCreationOptions creationOptions = TaskCreationOptions.DenyChildAttach)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            return Task.Factory.StartNew(action, CancellationToken.None, creationOptions,
-                TaskScheduler.Default);
-        }
-
-        public static Task InvokeAsync([NotNull] this Action action, TimeSpan delayTimeSpan,
-            TaskCreationOptions creationOptions = TaskCreationOptions.DenyChildAttach)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            return Task.Factory.StartNew(() =>
-                {
-                    Task.Delay(delayTimeSpan).GetAwaiter().GetResult();
-                    action();
-                }, CancellationToken.None, creationOptions,
-                TaskScheduler.Default);
-        }
-
-
-        public static Task<TResult> InvokeAsync<TResult>([NotNull] this Func<TResult> action, TimeSpan delayTimeSpan,
-            TaskCreationOptions creationOptions = TaskCreationOptions.DenyChildAttach)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            return Task.Factory.StartNew(() =>
-                {
-                    Task.Delay(delayTimeSpan).GetAwaiter().GetResult();
-                    return action();
-                }, CancellationToken.None, creationOptions,
-                TaskScheduler.Default);
-        }
-
-
+         
         public static Task ForEachAsync<TType>([NotNull] this IEnumerable<TType> collection,
             [NotNull] Action<TType> action)
         {
@@ -160,5 +76,15 @@ namespace Plugins.ToolKits
                 }
             }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
+
+
+        public static Task<bool> TryRemoveAsync<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                return dictionary.TryRemove(key);
+            }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+        }
+
     }
 }

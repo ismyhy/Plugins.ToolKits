@@ -12,9 +12,9 @@
 6. Simple EasyTcp
 7. Simple EasyTimer
 8. Simple RESTful</Description>
-		<Version>1.7.7</Version>
-		<AssemblyVersion>1.7.7.0</AssemblyVersion>
-		<FileVersion>1.7.7.0</FileVersion>
+		<Version>1.7.7.6</Version>
+		<AssemblyVersion>1.7.7.6</AssemblyVersion>
+		<FileVersion>1.7.7.6</FileVersion>
 		<Language>9.0</Language>
 		<PackageLicenseFile>Plugins.ToolKits.txt</PackageLicenseFile>
 		<Company>Hy</Company>
@@ -54,12 +54,6 @@
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
 		</None>
-	</ItemGroup>
- 
- 
-
-	<ItemGroup>
-	  <Folder Include="Commom\" />
 	</ItemGroup>
 
 	<PropertyGroup>

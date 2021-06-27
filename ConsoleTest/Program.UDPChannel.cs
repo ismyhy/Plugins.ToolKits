@@ -5,75 +5,77 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace ConsoleTest
 {
 
     public class Program1 : UDPChannel
     {
-        PacketSetting setting = new PacketSetting()
+        private readonly PacketSetting setting = new PacketSetting()
         {
             ReportArrived = false,
         };
-        int serverIndex = 0;
+        public static int serverIndex = 0;
         public Program1(IPEndPoint localPoint) : base(localPoint)
         {
 
-        } 
+        }
         protected override void Recived(ISession session, byte[] dataBuffer)
         {
-            string message = Encoding.UTF8.GetString(dataBuffer);
-            if (serverIndex % 100 == 0)
-                Console.WriteLine(message + "   " + session.GetHashCode());
-            byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
-            session.SendAsync(buffer2, 0, buffer2.Length, setting);
-        } 
+          
+            Interlocked.Increment(ref serverIndex); 
+            //string message = Encoding.UTF8.GetString(dataBuffer);
+            //if (serverIndex % 100 == 0)
+            //    Console.WriteLine(message + "   " + session.GetHashCode());
+            //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Client {serverIndex++}");
+            //session.SendAsync(buffer2, 0, buffer2.Length, null);
+        }
     }
 
     public class Program2 : UDPChannel
     {
-        PacketSetting setting = new PacketSetting()
+        private readonly PacketSetting setting = new PacketSetting()
         {
             ReportArrived = false,
         };
-        int clientIndex = 0;
+        public static int clientIndex = 0;
         public Program2(IPEndPoint localPoint, IPEndPoint remotePoint) : base(localPoint, remotePoint)
         {
 
         }
         protected override void Recived(ISession session, byte[] dataBuffer)
         {
-            string message = Encoding.UTF8.GetString(dataBuffer);
+            var a = dataBuffer;
+          
+            //string message = Encoding.UTF8.GetString(dataBuffer);
 
-            if (clientIndex % 100 == 0)
-                Console.WriteLine(message + "   " + session.GetHashCode());
+            //if (clientIndex % 100 == 0)
+            //    Console.WriteLine(message + "   " + session.GetHashCode());
 
-            byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
-            session.SendAsync(buffer2, 0, buffer2.Length, setting);
+            //byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+            //session.SendAsync(buffer2, 0, buffer2.Length, null);
         }
     }
     internal partial class Program
-    { 
+    {
 
         [Test]
         public void UDPChannelTest()
         {
-
-
-            int serverIndex = 0;
             int clientIndex = 0;
             IPAddress ip = IPAddress.Parse("127.0.0.1");
-            var ports = TransmissionAssist.GetAvailablePort(2);
+            IReadOnlyList<int> ports = TransmissionAssist.GetAvailablePort(2);
 
-            var setting = new PacketSetting()
+            PacketSetting setting = new PacketSetting()
             {
-                ReportArrived = false,
+                ReportArrived = true,
             };
-            var serverEndPoint=new IPEndPoint(ip, ports.First());
-            var channel = new Program1(serverEndPoint);
+            IPEndPoint serverEndPoint = new IPEndPoint(ip, ports.First());
+            Program1 channel = new Program1(serverEndPoint);
             channel.RunAsync();
 
-            var channel2 = new Program2(new IPEndPoint(ip, ports.Last()), serverEndPoint);
+            Program2 channel2 = new Program2(new IPEndPoint(ip, ports.Last()), serverEndPoint);
 
             channel2.RunAsync();
 
@@ -107,13 +109,25 @@ namespace ConsoleTest
             //  .UseRemoteIPEndPoint(ip, serverPoart)
             //  .Build()
             //  .RunAsync();
-
-            Invoker.For(0, 1, () =>
+            EasyTimer.Share
+                    .UseAutoReset(true)
+                    .UseInterval(1000)
+                    .UesCallback(() =>
+                    {
+                        var a = Program1.serverIndex;
+                        Console.WriteLine($"clientIndex:{ clientIndex}  serverIndex:{a}   {clientIndex-a}");
+                    })
+                    .RunAsync();
+            Invoker.For(0,1 /*int.MaxValue*/, () =>
             {
-                byte[] buffer2 = Encoding.UTF8.GetBytes($"Hello Server {clientIndex++}");
+                Interlocked.Increment(ref clientIndex);
+                byte[] buffer2 = /*BitConverter.GetBytes(clientIndex++); //*/Encoding.UTF8.GetBytes($"Hello  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Server ");
 
                 channel2.Send(buffer2, 0, buffer2.Length, setting);
             });
+
+
+
 
             Console.ReadKey();
 

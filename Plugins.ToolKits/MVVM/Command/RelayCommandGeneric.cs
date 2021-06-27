@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Plugins.ToolKits.MVVM
 {
     public sealed class RelayCommand<TParameter> : CommandBase
     {
-        private readonly Action<TParameter> executeAction;
+        private readonly ICollection<Action<TParameter>> executeActions = new List<Action<TParameter>>();
+
         private readonly Action<IExclusiveContext<TParameter>> executeExclusiveAction;
         public RelayCommand(Action<TParameter> executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
         {
-            this.executeAction = executeAction;
+            executeActions.Add(executeAction);
             base.canExecuteFunc = canExecuteFunc;
             base.catchCallback = catchCallback;
         }
@@ -31,7 +33,6 @@ namespace Plugins.ToolKits.MVVM
             ExecuteExclusiveActionRun(parameter);
 
         }
-
 
         private void ExecuteExclusiveActionRun(object parameter)
         {
@@ -68,9 +69,21 @@ namespace Plugins.ToolKits.MVVM
             }
         }
 
+        public RelayCommand<TParameter> AddExecuteAction(Action<TParameter> executeAction)
+        {
+            if (executeAction == null)
+            {
+                throw new ArgumentNullException(nameof(executeAction));
+            }
+            executeActions.Add(executeAction);
+            return this;
+        }
+
+
+
         private void ExecuteActionRun(object parameter)
         {
-            if (executeAction is null)
+            if (executeActions is null || executeActions.Count==0)
             {
                 return;
             }
@@ -84,7 +97,7 @@ namespace Plugins.ToolKits.MVVM
 
                 if (parameter is TParameter target)
                 {
-                    executeAction(target);
+                    executeActions.ForEach(i=>i(target));
                 }
             }
             catch (Exception e)

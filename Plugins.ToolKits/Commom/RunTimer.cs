@@ -6,14 +6,14 @@ using System.Diagnostics;
 
 namespace Plugins.ToolKits
 {
-    public sealed class EasyTimer : IDisposable
+    public sealed class RunTimer : IDisposable
     {
-        private static readonly IDictionary<object, EasyTimer> timerLongs =
-            new ConcurrentDictionary<object, EasyTimer>();
+        private static readonly IDictionary<object, RunTimer> timerLongs =
+            new ConcurrentDictionary<object, RunTimer>();
 
         private readonly Stopwatch stopwatch;
 
-        public EasyTimer([NotNull] object token)
+        public RunTimer([NotNull] object token)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
             NowTimer = DateTime.Now;
@@ -76,9 +76,9 @@ namespace Plugins.ToolKits
             return $"Elapsed Time:{stopwatch.ElapsedMilliseconds} ms";
         }
 
-        public static EasyTimer StartNew()
+        public static RunTimer StartNew()
         {
-            return new EasyTimer(Guid.NewGuid());
+            return new RunTimer(Guid.NewGuid());
         }
 
 
@@ -89,7 +89,7 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            timerLongs[token] = new EasyTimer(token);
+            timerLongs[token] = new RunTimer(token);
         }
 
         public static TimeSpan GetTimeSpan([NotNull] object token, bool removeTokenAfterRead = true)
@@ -99,7 +99,7 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            if (!timerLongs.TryGetValue(token, out EasyTimer timer))
+            if (!timerLongs.TryGetValue(token, out RunTimer timer))
             {
                 throw new NotSupportedException($"Token:{token} not set ");
             }
@@ -119,7 +119,7 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(token));
             }
 
-            if (!timerLongs.TryGetValue(token, out EasyTimer timer))
+            if (!timerLongs.TryGetValue(token, out RunTimer timer))
             {
                 throw new NotSupportedException($"Token:{token} not set ");
             }
@@ -132,14 +132,14 @@ namespace Plugins.ToolKits
             return timer.GetTotalMilliseconds();
         }
 
-        public static EasyTimer Run(Action action)
+        public static RunTimer Run(Action action)
         {
             if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
 
-            EasyTimer timer = EasyTimer.StartNew();
+            RunTimer timer = RunTimer.StartNew();
             try
             {
                 action();

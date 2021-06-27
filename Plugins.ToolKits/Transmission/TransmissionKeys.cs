@@ -13,5 +13,7 @@
         public const string MessageSender = "MessageSender";
         public const string Decompress = "Decompress";
         public const string Compress = "Compress";
+        public const string SendPacketPool= "SendPacketPool";
+        public const string SendResetEvent= "SendResetEvent";
     }
 }

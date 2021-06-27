@@ -5,18 +5,18 @@ namespace Plugins.ToolKits.Validatement
 {
     public interface IValidate
     {
-        void Register<TReturnType>(Expression<Func<TReturnType>> expression, Func<TReturnType, bool> validatorFunc,
-            string validateErrorMessage);
+        //void Register<TReturnType>(Expression<Func<TReturnType>> expression, Func<TReturnType, bool> validatorFunc,
+        //    string validateErrorMessage);
 
-        void Register<TReturnType>(string propertyName, Func<TReturnType, bool> validatorFunc,
-            string validateErrorMessage);
+        //void Register<TReturnType>(string propertyName, Func<TReturnType, bool> validatorFunc,
+        //    string validateErrorMessage);
 
 
-        void Register<TReturnType>(Expression<Func<TReturnType>> expression, Func<bool> validatorFunc,
-            string validateErrorMessage);
+        //void Register<TReturnType>(Expression<Func<TReturnType>> expression, Func<bool> validatorFunc,
+        //    string validateErrorMessage);
 
-        void Register(string propertyName, Func<bool> validatorFunc,
-            string validateErrorMessage);
+        //void Register(string propertyName, Func<bool> validatorFunc,
+        //    string validateErrorMessage);
 
 
         void Register<TReturnType>(Expression<Func<TReturnType>> expression,

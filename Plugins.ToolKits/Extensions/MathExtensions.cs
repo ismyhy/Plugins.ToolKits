@@ -3,54 +3,7 @@
 namespace Plugins.ToolKits
 {
     public static partial class MathExtensions
-    {
-        public static bool IsZero(this double doubleValue, double contrastAccuracy = double.Epsilon)
-        {
-            if (doubleValue is double.NaN)
-            {
-                return false;
-            }
-
-
-            double value = Math.Abs(doubleValue - contrastAccuracy);
-
-            if (value > 0)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool IsZero(this float floatValue, float contrastAccuracy = float.Epsilon)
-        {
-            if (floatValue is float.NaN)
-            {
-                return false;
-            }
-
-            float value = Math.Abs(floatValue - contrastAccuracy);
-
-            if (value > 0)
-            {
-                return false;
-            }
-
-            return true;
-        }
-        public static bool IsZero(this decimal decimalValue, decimal contrastAccuracy = decimal.Zero)
-        {
-
-            decimal value = Math.Abs(decimalValue - contrastAccuracy);
-
-            if (value > 0)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
+    {  
         public static int FromRange(this int value, int minValue, int maxValue)
         {
             return value < minValue ? minValue : value > maxValue ? maxValue : value;

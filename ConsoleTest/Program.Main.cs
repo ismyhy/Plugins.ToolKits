@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,9 +28,13 @@ namespace ConsoleTest
             }
         }
 
+        
 
         private static void Main(string[] args)
-        { 
+        {
+            var CommandCounter = int.MaxValue;
+            Interlocked.Increment(ref CommandCounter);
+
             List<KeyValuePair<MethodInfo, TestAttribute>> actions = typeof(Program).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public)
                 .ToDictionary(i => i, i => i.GetAttribute<TestAttribute>())
                 .Where(i => i.Value != null)

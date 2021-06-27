@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -7,18 +8,12 @@ using System.Threading.Tasks;
 
 namespace Plugins.ToolKits.MVVM
 {
+    [DebuggerDisplay("Action Count:{ActionMapping.Count()}  Func Count:{FuncMapping.Count()}")]
     public sealed class Messenger : IMessenger
     {
         private readonly Mapping<object, object, object> ActionMapping = new Mapping<object, object, object>();
         private readonly Mapping<object, object, object> FuncMapping = new Mapping<object, object, object>();
-
-
-        public override string ToString()
-        {
-            return $"Action Count:{ActionMapping.Count()}  Func Count:{FuncMapping.Count()}";
-        }
-
-
+         
         public void UnregisterAll(object recipient)
         {
             ActionMapping.Remove(recipient);

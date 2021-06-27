@@ -48,13 +48,10 @@ namespace Plugins.ToolKits.Transmission.UDP
             }
 
             ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
-            packet.RefreshCounter();
-
-            var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, int, int>>(TransmissionKeys.MessageSender);
-             
-            int sendCount = sender(packet, RemoteEndPoint, setting?.MillisecondsTimeout ?? -1); 
-
-            return sendCount;
+            //packet.RefreshCounter(); 
+            var sender=Context.Get<Func<ProtocolPacket, IPEndPoint, SyncProtocol>>(TransmissionKeys.MessageSender); 
+            var sendCount = sender(packet, RemoteEndPoint); 
+            return sendCount.Wait();
         }
 
         public Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null)

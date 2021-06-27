@@ -1,9 +1,10 @@
 ﻿
+using Plugins.ToolKits.IOCKits;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plugins.ToolKits.IOCKits
+namespace Plugins.ToolKits
 {
     public static class Injecter
     {

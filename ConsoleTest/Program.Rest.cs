@@ -32,7 +32,7 @@ namespace ConsoleTest
         [Test]
         private static void RestConfigTest()
         {
-           
+            return;
 
             IRestClient rest = RestConfig.Default()
                 .UseBaseUrl("http://localhost:65374")

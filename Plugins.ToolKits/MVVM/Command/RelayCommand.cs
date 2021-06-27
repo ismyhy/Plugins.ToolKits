@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -7,11 +8,11 @@ namespace Plugins.ToolKits.MVVM
 {
     public sealed class RelayCommand : CommandBase
     {
-        private readonly Action executeAction;
+        private readonly ICollection<Action> executeActions = new List<Action>();
         private readonly Action<IExclusiveContext> executeExclusiveAction;
         public RelayCommand(Action executeAction, Func<bool> canExecuteFunc = null, Action<Exception> catchCallback = null)
         {
-            this.executeAction = executeAction;
+            executeActions.Add(executeAction);
             base.canExecuteFunc = canExecuteFunc;
             base.catchCallback = catchCallback;
         }
@@ -57,9 +58,20 @@ namespace Plugins.ToolKits.MVVM
             }
         }
 
+        public RelayCommand AddExecuteAction(Action executeAction)
+        {
+            if(executeAction == null)
+            {
+                throw new ArgumentNullException(nameof(executeAction));
+            } 
+            executeActions.Add(executeAction);
+            return this;
+        }
+
+
         private void ExecuteActionRun(object parameter)
         {
-            if (executeAction is null)
+            if (executeActions is null || executeActions.Count==0)
             {
                 return;
             }
@@ -70,7 +82,7 @@ namespace Plugins.ToolKits.MVVM
                     return;
                 }
                 IsCommandExecuting = true;
-                executeAction();
+                executeActions.ForEach(i=>i());
             }
             catch (Exception e)
             {

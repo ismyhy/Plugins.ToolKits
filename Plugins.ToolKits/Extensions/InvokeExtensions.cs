@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -183,6 +185,32 @@ namespace Plugins.ToolKits
 
             return Task.Factory.StartNew(action, token2, creationOptions, TaskScheduler.Default);
         }
+         
+
+
+        public static bool SetValue<TType>(ref TType field, TType newValue, IEqualityComparer<TType> comparer=null)
+        {
+            
+            if (comparer is null)
+            {
+                comparer = EqualityComparer<TType>.Default;
+            }
+
+            if (comparer.Equals(field, newValue))
+            {
+                return false;
+            }
+             
+            field = newValue; 
+            return true;
+        }
+
+
+
+
+
+
+
 
     }
 }

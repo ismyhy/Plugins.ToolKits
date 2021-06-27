@@ -2,9 +2,6 @@
 
 namespace Plugins.ToolKits.MVVM
 {
-
-
-
     public interface IExclusiveContext : IDisposable
     {
         IExclusiveContext BeginExclusive();

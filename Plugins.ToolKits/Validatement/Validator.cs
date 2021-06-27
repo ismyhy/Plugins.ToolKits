@@ -114,7 +114,6 @@ namespace Plugins.ToolKits.Validatement
             if (propertyInfo is null)
             {
                 return new List<string>();
-                // throw new ArgumentException($"can not find PropertyInfo:{propertyName} in Type:{_owner.GetType()}");
             }
 
             return validateResult[propertyInfo];
@@ -129,7 +128,13 @@ namespace Plugins.ToolKits.Validatement
 
             string propertyName = expression.GetMemberName();
 
-            ((IValidate)this).Register<TReturnType>(expression, i => i is null, validateErrorMessage ?? $"{propertyName} is Null");
+            ((IValidate)this).Register<TReturnType>(expression, i => { 
+            if(i is null)
+                {
+                    return ValidateResult.Invalid;
+                }
+                return ValidateResult.Valid;
+            }, validateErrorMessage ?? $"{propertyName} is Null");
         }
 
         //public void MaxLength(Expression<Func<string>> expression, string validateErrorMessage = null)

@@ -1,4 +1,5 @@
-﻿using Plugins.ToolKits.IOCKits;
+﻿using Plugins.ToolKits;
+using Plugins.ToolKits.IOCKits;
 using System;
 
 namespace ConsoleTest
