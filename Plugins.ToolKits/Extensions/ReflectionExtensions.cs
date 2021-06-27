@@ -82,18 +82,6 @@ namespace Plugins.ToolKits
         }
 
 
-        public static T TryCast<T>(this object value)
-        {
-            if (value is null)
-            {
-                return default;
-            }
-
-            return typeof(T).IsValueType
-                ? (T)Convert.ChangeType(value, typeof(T))
-                : value is T typeValue
-                    ? typeValue
-                    : default;
-        }
+        
     }
 }

@@ -14,6 +14,15 @@ namespace Plugins.ToolKits.MVVM
 
         public event PropertyChangingEventHandler PropertyChanging;
 
+        public virtual void NotifyPropertyChanged(params string[] propertyNames)
+        {
+            RaisePropertyListChanged(propertyNames);
+        }
+
+        public virtual Task NotifyPropertyChangedAsync(params string[] propertyNames)
+        {
+            return RaisePropertyListChangedAsync(propertyNames);
+        }
 
         protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -53,13 +62,12 @@ namespace Plugins.ToolKits.MVVM
 
         protected virtual Task RaisePropertyListChangedAsync(params string[] propertyNames)
         {
+            if (propertyNames == null || propertyNames.Length == 0)
+            {
+                return Task.Delay(0);
+            }
             return Task.Factory.StartNew(() =>
             {
-                if (propertyNames == null || propertyNames.Length == 0)
-                {
-                    return;
-                }
-
                 PropertyChangedEventHandler propertyChanged = PropertyChanged;
 
                 propertyNames.Where(i => i != null).ToArray().ForEach(propertyName =>

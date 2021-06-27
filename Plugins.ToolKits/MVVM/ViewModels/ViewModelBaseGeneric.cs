@@ -22,7 +22,7 @@ namespace Plugins.ToolKits.MVVM
         public static TViewModel Instance => Lazy.Value;
 
 
-        public virtual void RaisePropertyChanged([NotNull] Expression<Func<TViewModel, object>> propertyExpression)
+        public virtual void RaisePropertyChanged<TPropertyType>([NotNull] Expression<Func<TViewModel, TPropertyType>> propertyExpression)
         {
             if (propertyExpression is null)
             {

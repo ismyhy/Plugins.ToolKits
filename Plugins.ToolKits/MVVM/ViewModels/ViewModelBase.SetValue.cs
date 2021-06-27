@@ -9,15 +9,15 @@ namespace Plugins.ToolKits.MVVM
     {
         private readonly ConcurrentDictionary<string, object>
             PropertyInfoValues = new ConcurrentDictionary<string, object>();
-          
+
         public virtual object Identity
         {
             get => PropertyInfoValues[nameof(Identity)];
-            set => PropertyInfoValues[nameof(Identity)]=value;
+            set => PropertyInfoValues[nameof(Identity)] = value;
         }
 
 
-        protected bool SetValue<TType>(ref TType field, TType newValue, [CallerMemberName] string propertyName = null)
+        protected bool SetValue<TType>(ref TType field, TType newValue, [CallerMemberName] string propertyName = null, params string[] affectOtherPropertyNames)
         {
             if (propertyName is null)
             {
@@ -31,12 +31,13 @@ namespace Plugins.ToolKits.MVVM
 
             RaisePropertyChanging(propertyName);
             field = newValue;
-            RaisePropertyChanged(propertyName);
+            RaisePropertyChanged(propertyName); 
+            RaisePropertyListChangedAsync(affectOtherPropertyNames);
             return true;
         }
 
 
-        protected bool SetValue<TType>(TType newValue, [CallerMemberName] string propertyName = null)
+        protected bool SetValue<TType>(TType newValue, [CallerMemberName] string propertyName = null, params string[] affectOtherPropertyNames)
         {
             if (propertyName is null)
             {
@@ -53,13 +54,14 @@ namespace Plugins.ToolKits.MVVM
 
             RaisePropertyChanging(propertyName);
             PropertyInfoValues[propertyName] = newValue;
-            RaisePropertyChanged(propertyName);
+            RaisePropertyChanged(propertyName); 
+            RaisePropertyListChangedAsync(affectOtherPropertyNames);
             return true;
         }
 
 
         protected bool SetValue<TType>(TType newValue, IEqualityComparer<TType> comparer,
-            [CallerMemberName] string propertyName = null)
+            [CallerMemberName] string propertyName = null, params string[] affectOtherPropertyNames)
         {
             if (propertyName is null)
             {
@@ -82,10 +84,11 @@ namespace Plugins.ToolKits.MVVM
             RaisePropertyChanging(propertyName);
             PropertyInfoValues[propertyName] = newValue;
             RaisePropertyChanged(propertyName);
+            RaisePropertyListChangedAsync(affectOtherPropertyNames);
             return true;
         }
 
-        protected TType GetValue<TType>(TType defaultValue = default, [CallerMemberName] string propertyName = null)
+        protected TType GetValue<TType>(TType defaultValue = default, [CallerMemberName] string propertyName = null, params string[] affectOtherPropertyNames)
         {
             if (propertyName is null)
             {
@@ -98,7 +101,7 @@ namespace Plugins.ToolKits.MVVM
             }
 
             PropertyInfoValues[propertyName] = defaultValue;
-
+            RaisePropertyListChangedAsync(affectOtherPropertyNames);
             return defaultValue;
         }
     }

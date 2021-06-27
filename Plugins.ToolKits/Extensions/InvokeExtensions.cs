@@ -188,7 +188,7 @@ namespace Plugins.ToolKits
          
 
 
-        public static bool SetValue<TType>(ref TType field, TType newValue, IEqualityComparer<TType> comparer=null)
+        public static bool SetWhenNotEquals<TType>(ref TType field, TType newValue, IEqualityComparer<TType> comparer=null)
         {
             
             if (comparer is null)
@@ -208,7 +208,19 @@ namespace Plugins.ToolKits
 
 
 
+        public static T CastTo<T>(this object value)
+        {
+            if (value is null)
+            {
+                return default;
+            }
 
+            return typeof(T).IsValueType
+                ? (T)Convert.ChangeType(value, typeof(T))
+                : value is T typeValue
+                    ? typeValue
+                    : default;
+        }
 
 
 
