@@ -23,8 +23,8 @@ namespace ConsoleTest
         }
         protected override void Recived(ISession session, byte[] dataBuffer)
         {
-          
-            Interlocked.Increment(ref serverIndex); 
+
+            Interlocked.Increment(ref serverIndex);
             //string message = Encoding.UTF8.GetString(dataBuffer);
             //if (serverIndex % 100 == 0)
             //    Console.WriteLine(message + "   " + session.GetHashCode());
@@ -47,7 +47,7 @@ namespace ConsoleTest
         protected override void Recived(ISession session, byte[] dataBuffer)
         {
             var a = dataBuffer;
-          
+
             //string message = Encoding.UTF8.GetString(dataBuffer);
 
             //if (clientIndex % 100 == 0)
@@ -69,7 +69,7 @@ namespace ConsoleTest
 
             PacketSetting setting = new PacketSetting()
             {
-                ReportArrived = true,
+                ReportArrived = false,
             };
             IPEndPoint serverEndPoint = new IPEndPoint(ip, ports.First());
             Program1 channel = new Program1(serverEndPoint);
@@ -115,25 +115,32 @@ namespace ConsoleTest
                     .UesCallback(() =>
                     {
                         var a = Program1.serverIndex;
-                        Console.WriteLine($"clientIndex:{ clientIndex}  serverIndex:{a}   {clientIndex-a}");
+                        Console.WriteLine($"clientIndex:{ clientIndex}  serverIndex:{a}   {clientIndex - a}");
                     })
                     .RunAsync();
-            Invoker.For(0,1 /*int.MaxValue*/, () =>
-            {
-                Interlocked.Increment(ref clientIndex);
-                byte[] buffer2 = /*BitConverter.GetBytes(clientIndex++); //*/Encoding.UTF8.GetBytes($"Hello  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Server ");
 
-                channel2.Send(buffer2, 0, buffer2.Length, setting);
+            var sb = new StringBuilder();
+            Invoker.For(0, 200, () =>
+            {
+                sb.Append("X");
             });
 
+            Invoker.For(0, 1 * int.MaxValue, () =>
+         {
+             Interlocked.Increment(ref clientIndex);
+
+             byte[] buffer2 = /*BitConverter.GetBytes(clientIndex++); //*/Encoding.UTF8.GetBytes(sb.ToString());
+
+             channel2.Send(buffer2, 0, buffer2.Length, setting);
+         });
 
 
-
-            Console.ReadKey();
-
+       
 
             channel2.Dispose();
-            channel.Dispose();
+            channel.Dispose();    
+            Console.ReadKey();
+
         }
     }
 }

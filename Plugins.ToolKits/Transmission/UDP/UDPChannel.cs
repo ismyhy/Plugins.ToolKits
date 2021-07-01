@@ -17,8 +17,8 @@ namespace Plugins.ToolKits.Transmission
     public abstract partial class UDPChannel : IUDPChannel
     {
         public bool IsRunning { get; private set; }
-        public readonly ContextContainer Context = new ContextContainer();
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0, 1);
+        public ContextContainer Context = new ContextContainer();
+        private SemaphoreSlim semaphore = new SemaphoreSlim(0, 1);
         private IPEndPoint remoteEndPoint;
         protected UDPChannel(IPEndPoint localEndPoint)
         {
@@ -50,15 +50,18 @@ namespace Plugins.ToolKits.Transmission
         public void Dispose()
         {
             IsRunning = false;
+            semaphore.Release();
 
-            if (Context.TryGet<UdpClient>(TransmissionKeys.UdpClient, out UdpClient udpClient))
-            {
-                udpClient?.Close();
-                Context.RemoveKey(TransmissionKeys.UdpClient);
-            }
+            Client?.Close();
+            Client = null;
             Context.ToObjectCollection().OfType<IDisposable>().ForEach(c => Invoker.RunIgnore<Exception>(c.Dispose));
             Context?.Dispose();
+            Context = null;
             SyncHandles?.Clear();
+            SyncHandles = null; 
+            SyncHandle2s = null;
+            semaphore.Dispose();
+            semaphore = null;
         }
         ~UDPChannel()
         {
@@ -67,14 +70,12 @@ namespace Plugins.ToolKits.Transmission
 
         public int Send(byte[] buffer, int offset, int length, PacketSetting setting = null)
         {
-
             ProtocolPacket packet = ProtocolPacket.BuildPacket(buffer, offset, length, setting);
-            //packet.RefreshCounter();
 
             var p = AddSenderQueue(packet, remoteEndPoint);
 
             var sendCount = p.Wait();
-            return sendCount;//PacketSender(packet, remoteEndPoint, setting?.MillisecondsTimeout ?? -1);
+            return sendCount;
         }
 
         public Task<int> SendAsync(byte[] buffer, int offset, int length, PacketSetting setting = null)
@@ -90,13 +91,14 @@ namespace Plugins.ToolKits.Transmission
 
         public IUDPChannel RunAsync()
         {
+            IsRunning = true;
             InnerSender();
             ConcurrentDictionary<int, ISession> Sessions = new();
             Context.TryGet<List<IPAddress>>(TransmissionKeys.JoinMulticastGroup, out List<IPAddress> list);
             Context.TryGet(TransmissionKeys.RemoteIPEndPoint, out remoteEndPoint);
             list?.ForEach(x => Client.JoinMulticastGroup(x));
 
-            IsRunning = true;
+
             Client.BeginReceive(ReceiveCallback, Client);
 
             return this;
@@ -139,7 +141,7 @@ namespace Plugins.ToolKits.Transmission
 
                 udpClient.BeginReceive(ReceiveCallback, udpClient);
 
-                if (SyncHandles.TryGetValue(protocol.Counter, out var waitHandle))
+                if (SyncHandles.TryRemove(protocol.Counter, out var waitHandle))
                 {
                     waitHandle?.Set();
                     return;
@@ -172,7 +174,7 @@ namespace Plugins.ToolKits.Transmission
         }
 
         protected virtual void Exception(Exception exception)
-        { 
+        {
         }
         private SyncProtocol AddSenderQueue(ProtocolPacket packet, IPEndPoint remoteEndPoint)
         {
@@ -190,17 +192,18 @@ namespace Plugins.ToolKits.Transmission
 
         private void InnerSender()
         {
-            new Thread(() =>
+            Task.Factory.StartNew(() =>
             {
-                while (true)
+                while (IsRunning)
                 {
-                    if (!SyncHandle2s.TryDequeue(out var protocol))
-                    { 
-                        semaphore.Wait(-1);
-                        continue;
-                    }
+                    SyncProtocol protocol = null;
                     try
                     {
+                        if (!SyncHandle2s.TryDequeue(out protocol))
+                        {
+                            semaphore.Wait(-1);
+                            continue;
+                        }
                         if (protocol.ReportArrived)
                         {
                             SyncHandles[protocol.Counter] = protocol;
@@ -213,21 +216,19 @@ namespace Plugins.ToolKits.Transmission
                     }
                     finally
                     {
-                        if (!protocol.ReportArrived)
+                        if (protocol != null && !protocol.ReportArrived)
+                        {
                             protocol.Set();
+                        }
                     }
                 }
-            })
-            {
-                IsBackground = true,
-                Name = $"{DateTime.Now.Ticks}",
-            }.Start();
+            }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
 
 
-        private readonly ConcurrentQueue<SyncProtocol> SyncHandle2s = new ConcurrentQueue<SyncProtocol>();
+        private ConcurrentQueue<SyncProtocol> SyncHandle2s = new ConcurrentQueue<SyncProtocol>();
 
-        private readonly ConcurrentDictionary<long, SyncProtocol> SyncHandles = new ConcurrentDictionary<long, SyncProtocol>();
+        private ConcurrentDictionary<long, SyncProtocol> SyncHandles = new ConcurrentDictionary<long, SyncProtocol>();
 
         #endregion
 
@@ -248,8 +249,7 @@ namespace Plugins.ToolKits.Transmission
         }
 
         #endregion
-
-
+         
         #region  Base
 
         public bool MulticastLoopback
@@ -314,39 +314,7 @@ namespace Plugins.ToolKits.Transmission
             Client.AllowNatTraversal(allowed);
         }
         #endregion
-
-        //internal int PacketSender(ProtocolPacket packet, IPEndPoint remoteEndPoint, int millisecondsTimeout = -1)
-        //{
-        //    EventWaitHandle awaiter = null;
-
-        //    byte[] buffer = packet.ToBuffer();
-
-        //    if (packet.ReportArrived)
-        //    {
-        //        SyncHandles[packet.Counter] = awaiter = new ManualResetEvent(false);
-        //    }
-        //    semaphore.Wait(-1);
-
-        //    int sendCount;
-        //    try
-        //    {
-        //        sendCount = Client.Send(buffer, buffer.Length, remoteEndPoint);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        semaphore.Release(1);
-        //        return 0;
-        //    }
-        //    if (!packet.ReportArrived)
-        //    {
-        //        semaphore.Release(1);
-        //        return sendCount;
-        //    }
-        //    awaiter?.WaitOne(millisecondsTimeout);
-        //    semaphore.Release(1);
-        //    SyncHandles.TryRemoveAsync(packet.Counter);
-        //    return sendCount;
-        //}
+         
     }
 
 }

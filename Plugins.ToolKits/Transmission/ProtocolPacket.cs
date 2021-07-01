@@ -222,6 +222,11 @@ namespace Plugins.ToolKits.Transmission.Protocol
             Counter = protocol.Counter;
         }
 
+        public Func<byte[], int, IPEndPoint, int> SendFunc { get; set; } 
+
+        public Action<Exception> ExceptionFunc { get; set; }
+
+
         public IPEndPoint RemoteEndPoint { get; }
         public byte[] Buffer { get; set; }
 
