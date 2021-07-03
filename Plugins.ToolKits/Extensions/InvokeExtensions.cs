@@ -14,8 +14,7 @@ namespace Plugins.ToolKits
             if (action is null)
             {
                 return;
-            }
-
+            } 
             try
             {
                 action();
@@ -45,6 +44,8 @@ namespace Plugins.ToolKits
 
         public static void For(int startIndex, int endIndex, Action<int> action)
         {
+             
+
             if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));

@@ -202,7 +202,7 @@ namespace Plugins.ToolKits.EasyHttp
             {
                 return;
             }
-            Context.ToObjectCollection().OfType<IDisposable>().ForEach(i =>
+            Context.ToCollection().OfType<IDisposable>().ForEach(i =>
             {
                 Invoker.RunIgnore<Exception>(i.Dispose);
             });

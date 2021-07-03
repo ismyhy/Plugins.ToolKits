@@ -115,17 +115,18 @@ namespace ConsoleTest
                     .UesCallback(() =>
                     {
                         var a = Program1.serverIndex;
-                        Console.WriteLine($"clientIndex:{ clientIndex}  serverIndex:{a}   {clientIndex - a}");
+                        Console.WriteLine($"clientIndex:{ clientIndex}  serverIndex:{a}   {clientIndex - a}  {Thread.CurrentThread.ManagedThreadId}");
+                        Thread.Sleep(100000);
                     })
                     .RunAsync();
 
             var sb = new StringBuilder();
-            Invoker.For(0, 200, () =>
+            Invoker.For(0, 30, () =>
             {
                 sb.Append("X");
             });
 
-            Invoker.For(0, 1 * int.MaxValue, () =>
+            Invoker.For(0, 10000 /** int.MaxValue*/, () =>
          {
              Interlocked.Increment(ref clientIndex);
 
@@ -135,10 +136,27 @@ namespace ConsoleTest
          });
 
 
-       
+
 
             channel2.Dispose();
-            channel.Dispose();    
+            channel2 = new Program2(new IPEndPoint(ip, ports.Last()), serverEndPoint);
+
+            channel2.RunAsync();
+
+            Invoker.For(0, 10000 /** int.MaxValue*/, () =>
+            {
+                Interlocked.Increment(ref clientIndex);
+
+                byte[] buffer2 = /*BitConverter.GetBytes(clientIndex++); //*/Encoding.UTF8.GetBytes(sb.ToString());
+
+                channel2.Send(buffer2, 0, buffer2.Length, setting);
+            });
+            channel2.Dispose();
+
+            Thread.Sleep(1000);
+
+            channel.Dispose();
+
             Console.ReadKey();
 
         }

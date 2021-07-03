@@ -124,31 +124,7 @@ namespace Plugins.ToolKits
 
             return !enumerable.Any();
         }
-
-
-        public static StringBuilder StringBuilder<T>(this IEnumerable<T> collection, Action<StringBuilder, T> action)
-        {
-            if (collection is null)
-            {
-                throw new ArgumentNullException(nameof(collection));
-            }
-
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            StringBuilder stringBuilder = new StringBuilder();
-
-            foreach (T item in collection)
-            {
-                action(stringBuilder, item);
-            }
-
-            return stringBuilder;
-        }
-
-
+         
         public static bool Equal<T>(this IList collection1, IList collection2)
         {
             if (collection1 == null || collection2 == null)

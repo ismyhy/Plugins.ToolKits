@@ -7,8 +7,7 @@ namespace Plugins.ToolKits
         public static int FromRange(this int value, int minValue, int maxValue)
         {
             return value < minValue ? minValue : value > maxValue ? maxValue : value;
-        }
-
+        } 
         public static byte FromRange(this byte value, byte minValue, byte maxValue)
         {
             return value < minValue ? minValue : value > maxValue ? maxValue : value;

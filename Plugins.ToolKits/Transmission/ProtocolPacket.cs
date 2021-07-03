@@ -44,6 +44,10 @@ namespace Plugins.ToolKits.Transmission.Protocol
             ReportArrived = false;
             Counter = 0;
             DataLength = 0;
+
+            RemoteEndPoint = null;
+            SendBuffer = null;
+            Semaphore.Dispose();
         }
 
         public byte[] ToBuffer()
@@ -58,31 +62,9 @@ namespace Plugins.ToolKits.Transmission.Protocol
             Buffer.BlockCopy(Data, Offset, buffer, PacketDataIndex, DataLength);
 
 
-            return buffer;
-
-            //using MemoryStream stream = new MemoryStream();
-            //using BinaryWriter write = new BinaryWriter(stream);
-
-            //write.Write(PacketLength);
-            //write.Write(Counter);
-            //write.Write(IsCompress ? (byte)1 : (byte)0);
-            //write.Write(ReportArrived ? (byte)1 : (byte)0);
-
-            //write.Write(Data, Offset, DataLength);
-            //return stream.ToArray();
+            return buffer; 
         }
-
-        //public void RefreshCounter()
-        //{
-        //    Counter = Interlocked.Increment(ref CommandCounter);
-        //    if (CommandCounter == int.MaxValue)
-        //    {
-        //        CommandCounter = 0;
-        //    }
-        //}
-
-
-
+         
 
         public static ProtocolPacket FromBuffer(byte[] buffer, int offset, int bufferLength)
         {
@@ -93,10 +75,7 @@ namespace Plugins.ToolKits.Transmission.Protocol
             protocol.IsCompress = buffer[PacketIsCompressIndex+offset] == 1;
             protocol.ReportArrived = buffer[PacketReportArrivedIndex + offset] == 1;
             if (bufferLength == TotalHeaderLength)
-            {
-                //protocol.Data = buffer ;
-                //protocol.Offset = PacketDataIndex + offset;
-                //protocol.DataLength = protocol.PacketLength - TotalHeaderLength;
+            { 
                 return protocol;
             } 
 
@@ -113,26 +92,7 @@ namespace Plugins.ToolKits.Transmission.Protocol
             Buffer.BlockCopy(buffer, PacketDataIndex + offset, buffer2, 0, buffer2.Length);
             protocol.Data = buffer2;
             protocol.Offset = 0;
-           
-            //using MemoryStream stream = new MemoryStream(buffer, offset, bufferLength);
-            //using BinaryReader reader = new BinaryReader(stream);
-
-            //protocol.PacketLength = reader.ReadInt32();
-            //protocol.Counter = reader.ReadInt32();
-            //protocol.IsCompress = reader.ReadByte() == 1;
-            //protocol.ReportArrived = reader.ReadByte() == 1;
-
-            //int effectiveDataLength = protocol.PacketLength - TotalHeaderLength;
-            //if (effectiveDataLength > 0)
-            //{
-            //    protocol.Data = reader.ReadBytes(effectiveDataLength);
-            //    if (protocol.IsCompress && protocol.Data.Length > 0)
-            //    {
-            //        protocol.Data = Decompress(protocol.Data, 0, protocol.Data.Length);
-            //    }
-            //    protocol.Offset = 0;
-            //    protocol.DataLength = protocol.Data.Length;
-            //}
+            
             return protocol;
         }
 
@@ -207,30 +167,18 @@ namespace Plugins.ToolKits.Transmission.Protocol
         }
 
         #endregion
-    }
 
 
-    internal  sealed class SyncProtocol:IDisposable
-    {
+
+        #region Sender
+
         private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(0, 1);
 
-        public SyncProtocol(ProtocolPacket protocol, IPEndPoint remoteEndPoint)
-        {
-            Buffer = protocol.ToBuffer();
-            ReportArrived = protocol.ReportArrived;
-            RemoteEndPoint = remoteEndPoint;
-            Counter = protocol.Counter;
-        }
+        public IPEndPoint RemoteEndPoint { get; set; }
 
-        public Func<byte[], int, IPEndPoint, int> SendFunc { get; set; } 
+        public byte[] SendBuffer { get; set; }
 
-        public Action<Exception> ExceptionFunc { get; set; }
-
-
-        public IPEndPoint RemoteEndPoint { get; }
-        public byte[] Buffer { get; set; }
-
-        public int Wait(int millisecondsTimeout=-1)
+        public int Wait(int millisecondsTimeout = -1)
         {
             Semaphore.Wait(millisecondsTimeout);
             return SendCount;
@@ -240,16 +188,54 @@ namespace Plugins.ToolKits.Transmission.Protocol
         {
             Semaphore.Release(1);
         }
-
-        public void Dispose()
-        {
-            Buffer = null;
-            Semaphore.Dispose(); 
-        }
-
-        public int Counter { get; set; }
+         
         public int SendCount { get; set; }
-        public bool ReportArrived { get; }
+
+        #endregion
     }
+
+
+    //internal  sealed class SyncProtocol:IDisposable
+    //{
+       
+    //    public SyncProtocol(ProtocolPacket protocol, IPEndPoint remoteEndPoint)
+    //    {
+    //        Buffer = protocol.ToBuffer();
+    //        ReportArrived = protocol.ReportArrived;
+    //        RemoteEndPoint = remoteEndPoint;
+    //        Counter = protocol.Counter;
+    //    }
+
+
+    //    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(0, 1);
+
+    //    public IPEndPoint RemoteEndPoint { get; }
+    //    public byte[] Buffer { get; set; }
+
+    //    public int Wait(int millisecondsTimeout=-1)
+    //    {
+    //        Semaphore.Wait(millisecondsTimeout);
+    //        return SendCount;
+    //    }
+
+    //    public void Set()
+    //    {
+    //        Semaphore.Release(1);
+    //    }
+
+    //    public void Dispose()
+    //    {
+    //        Buffer = null;
+    //        Semaphore.Dispose(); 
+    //    }
+    //    public int SendCount { get; set; }
+
+
+
+
+    //    public int Counter { get; set; }
+ 
+    //    public bool ReportArrived { get; }
+    //}
 
 }

@@ -228,9 +228,12 @@ namespace Plugins.ToolKits
             KeyObjects?.Clear();
         }
 
-        public IEnumerable<object> ToObjectCollection()
+        public ICollection<object> ToCollection()
         {
-            return TypeObjects.Values.Concat(KeyObjects.Values);
+            var list = new List<object>();
+            list.AddRange(TypeObjects.Values);
+            list.AddRange(KeyObjects.Values);
+            return list;
         }
 
         public void Clear()

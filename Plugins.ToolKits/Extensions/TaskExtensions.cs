@@ -6,12 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Plugins.ToolKits
-{
-    public class TaskWaiter
-    {
-    }
-
-
+{ 
     public static class TaskExtensions
     {
         public static void NoAwaiter([NotNull] this Task task)

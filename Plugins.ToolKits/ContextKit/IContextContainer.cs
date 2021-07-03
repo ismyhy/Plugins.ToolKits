@@ -8,8 +8,7 @@ namespace Plugins.ToolKits
 {
     public interface IContextContainer : IDisposable
     {
-        IEnumerable<object> ToObjectCollection();
-
+    
         void Clear();
 
         bool RemoveKey(string key);
