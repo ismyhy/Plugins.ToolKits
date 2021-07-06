@@ -49,7 +49,7 @@ namespace Plugins.ToolKits.MVVM
             get => _isSearching;
             set => SetProperty(ref _isSearching, value);
         }
-        public ICommand SearchCommand => ExecuteExclusiveCommand(async (exclusiveContext) =>
+        public ICommand SearchCommand => CommandBinder.BindExclusiveCommand(async (exclusiveContext) =>
     {
         exclusiveContext.BeginExclusive();
         try
@@ -80,7 +80,7 @@ namespace Plugins.ToolKits.MVVM
     });
 
 
-        public ICommand GotoCommand => ExecuteExclusiveCommand((context) =>
+        public ICommand GotoCommand => CommandBinder.BindExclusiveCommand((context) =>
       {
           try
           {
@@ -107,7 +107,7 @@ namespace Plugins.ToolKits.MVVM
 
       });
 
-        public ICommand FirstPageCommand => (ExecuteExclusiveCommand((context) =>
+        public ICommand FirstPageCommand => (CommandBinder.BindExclusiveCommand((context) =>
        {
            try
            {
@@ -122,7 +122,7 @@ namespace Plugins.ToolKits.MVVM
 
        }));
 
-        public ICommand PreviousPageCommand => ExecuteExclusiveCommand((context) =>
+        public ICommand PreviousPageCommand => CommandBinder.BindExclusiveCommand((context) =>
       {
           try
           {
@@ -143,7 +143,7 @@ namespace Plugins.ToolKits.MVVM
 
       });
 
-        public ICommand LastPageCommand => (ExecuteExclusiveCommand((context) =>
+        public ICommand LastPageCommand => (CommandBinder.BindExclusiveCommand((context) =>
       {
           try
           {
@@ -159,7 +159,7 @@ namespace Plugins.ToolKits.MVVM
 
       }));
 
-        public ICommand NextPageCommand => (ExecuteExclusiveCommand((context) =>
+        public ICommand NextPageCommand => (CommandBinder.BindExclusiveCommand((context) =>
        {
 
            try

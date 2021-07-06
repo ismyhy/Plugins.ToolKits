@@ -14,6 +14,8 @@ namespace Plugins.ToolKits.MVVM
 
         public event PropertyChangingEventHandler PropertyChanging;
 
+        protected CommandBinder CommandBinder { get; } = new CommandBinder();
+
         public virtual void NotifyPropertyChanged(params string[] propertyNames)
         {
             RaisePropertyListChanged(propertyNames);

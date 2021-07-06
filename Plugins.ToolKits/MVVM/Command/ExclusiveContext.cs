@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Plugins.ToolKits.MVVM
 {
@@ -8,12 +9,14 @@ namespace Plugins.ToolKits.MVVM
 
         void EndExclusive();
     }
+
     public interface IExclusiveContext<TParameter> : IExclusiveContext
     {
         TParameter Parameter { get; }
     }
 
 
+    [DebuggerDisplay("Parameter:{Parameter}")]
     internal class ExclusiveContext<TContext> : ExclusiveContext, IExclusiveContext<TContext>
     {
         internal ExclusiveContext(Action beginAction, Action endAction) : base(beginAction, endAction)
@@ -23,8 +26,7 @@ namespace Plugins.ToolKits.MVVM
         public TContext Parameter { get; internal set; }
 
     }
-
-
+     
     internal class ExclusiveContext : IExclusiveContext
     {
         private readonly Action EndExecuteCallback;

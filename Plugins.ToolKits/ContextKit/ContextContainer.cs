@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Plugins.ToolKits
 {
+
+
+    [DebuggerDisplay("Count:{(KeyObjects.Count+TypeObjects.Count)}")]
     public class ContextContainer : DynamicObject, IContextContainer
     {
 
