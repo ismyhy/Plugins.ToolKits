@@ -56,7 +56,7 @@ namespace Plugins.ToolKits.EasyHttp
             client.AllowWriteStreamBuffering = true;
             client.Timeout = Context.Get<int>(EasyHttpKeys.MillisecondsTimeout);
 
-            Checker.Ignore<Exception>(() =>
+            Invoker.Ignore<Exception>(() =>
             {
                 client.ServicePoint.Expect100Continue = false;
                 client.ServicePoint.UseNagleAlgorithm = false;
@@ -68,7 +68,7 @@ namespace Plugins.ToolKits.EasyHttp
 
             List<Parameter> parameterList = Context.TryGet(EasyHttpKeys.Parameters, () => new List<Parameter>());
 
-            Checker.Ignore<Exception>(() =>
+            Invoker.Ignore<Exception>(() =>
             {
                 List<Parameter> parameters = parameterList.Where(i => i.ParameterType == ParameterType.HttpHeader)
                     .ToList();
@@ -97,7 +97,7 @@ namespace Plugins.ToolKits.EasyHttp
                 });
             }
 
-            Checker.Ignore<Exception>(() =>
+            Invoker.Ignore<Exception>(() =>
             {
                 IWebProxy proxy = WebRequest.DefaultWebProxy;
                 proxy ??= WebRequest.GetSystemWebProxy();

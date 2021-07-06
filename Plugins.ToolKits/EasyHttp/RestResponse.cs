@@ -23,7 +23,7 @@ namespace Plugins.ToolKits.EasyHttp
                 return;
             }
             List<IDisposable> disosableObjects = Context.ToCollection().OfType<IDisposable>().ToList();
-            disosableObjects.ForEach(i => Invoker.RunIgnore<Exception>(() => i.Dispose()));
+            disosableObjects.ForEach(i => Invoker.Ignore<Exception>(() => i.Dispose()));
             disosableObjects.Clear();
             Context.Clear();
         }

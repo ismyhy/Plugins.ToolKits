@@ -7,9 +7,9 @@ using System.Runtime.CompilerServices;
 
 namespace Plugins.ToolKits
 {
-    public static partial class Checker
+    public static partial class Thrower
     {
-        public static void CheckNull<TObject>(this TObject target, string targetName, bool displayFilePath = false,
+        public static void IsNull<TObject>(this TObject target, string targetName, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0) where TObject : class
         {
@@ -28,11 +28,11 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException(targetName, $"{targetName} is Null{message}");
+            throw new ThrowerException(targetName, $"{targetName} is Null{message}");
         }
 
 
-        public static void Null<TObject>(Expression<Func<TObject>> targetExpression, bool displayFilePath = false,
+        public static void IsNull<TObject>(Expression<Func<TObject>> targetExpression, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0) where TObject : class
         {
@@ -52,11 +52,11 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException(targetName, $"{targetName} is Null{message}");
+            throw new ThrowerException(targetName, $"{targetName} is Null{message}");
         }
 
 
-        public static void True<TObject>(Expression<Func<TObject>> targetExpression,
+        public static void IfTrue<TObject>(Expression<Func<TObject>> targetExpression,
             [NotNull] Func<TObject, bool> checkFunc, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
@@ -83,10 +83,10 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException(targetName, $"{targetName} is Error{message}");
+            throw new ThrowerException(targetName, $"{targetName} is Error{message}");
         }
 
-        public static void False<TObject>(Expression<Func<TObject>> targetExpression,
+        public static void IfFalse<TObject>(Expression<Func<TObject>> targetExpression,
             [NotNull] Func<TObject, bool> checkFunc, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
@@ -113,11 +113,11 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException(targetName, $"{targetName} is Error{message}");
+            throw new ThrowerException(targetName, $"{targetName} is Error{message}");
         }
 
 
-        public static void True(Func<bool> predicate, string message, bool displayFilePath = false,
+        public static void IfTrue(Func<bool> predicate, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
         {
@@ -141,10 +141,10 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException($"{message}{message1}");
+            throw new ThrowerException($"{message}{message1}");
         }
 
-        public static void False(Func<bool> predicate, string message, bool displayFilePath = false,
+        public static void IfFalse(Func<bool> predicate, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
         {
@@ -167,11 +167,11 @@ namespace Plugins.ToolKits
 
             BreakInDebuggerIfAttached();
 
-            throw new CheckerException($"{message}{message1}");
+            throw new ThrowerException($"{message}{message1}");
         }
 
 
-        public static void True(bool condition, string message, bool displayFilePath = false,
+        public static void IfTrue(bool condition, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
         {
@@ -192,7 +192,7 @@ namespace Plugins.ToolKits
             throw new ArgumentException($"{message}{message1}");
         }
 
-        public static void False(bool condition, string message, bool displayFilePath = false,
+        public static void IfFalse(bool condition, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
         {

@@ -8,7 +8,7 @@ namespace Plugins.ToolKits
 {
     public static class Invoker
     {
-        public static void RunIgnore<TException>(Action action, Action<TException> exceptionCallback = null)
+        public static void Ignore<TException>(Action action, Action<TException> exceptionCallback = null)
          where TException : Exception
         {
             if (action is null)
@@ -24,7 +24,7 @@ namespace Plugins.ToolKits
                 exceptionCallback?.Invoke(exception);
             }
         }
-        public static void RunIgnoreException(Action action, Action<Exception> exceptionCallback = null) 
+        public static void Ignore(Action action, Action<Exception> exceptionCallback = null) 
         {
             if (action is null)
             {

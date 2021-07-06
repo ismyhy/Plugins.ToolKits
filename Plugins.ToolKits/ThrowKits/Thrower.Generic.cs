@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace Plugins.ToolKits
 {
-    public static partial class Checker
+    public static partial class Thrower
     {
-        public static void True<TException>(Func<bool> predicate, string message, bool displayFilePath = false,
+        public static void IfTrue<TException>(Func<bool> predicate, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
             where TException : Exception
@@ -29,7 +29,7 @@ namespace Plugins.ToolKits
             throw (TException)Activator.CreateInstance(typeof(TException), $"{message}{throwExceptionMessage}");
         }
 
-        public static void False<TException>(Func<bool> predicate, string message, bool displayFilePath = false,
+        public static void IfFalse<TException>(Func<bool> predicate, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
             where TException : Exception
@@ -54,7 +54,7 @@ namespace Plugins.ToolKits
         }
 
 
-        public static void True<TException>(bool condition, string message, bool displayFilePath = false,
+        public static void IfTrue<TException>(bool condition, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
             where TException : Exception
@@ -73,7 +73,7 @@ namespace Plugins.ToolKits
             throw (TException)Activator.CreateInstance(typeof(TException), $"{message}{throwExceptionMessage}");
         }
 
-        public static void False<TException>(bool condition, string message, bool displayFilePath = false,
+        public static void IfFalse<TException>(bool condition, string message, bool displayFilePath = false,
             [CallerFilePath] string callerFilePath = null,
             [CallerLineNumber] int callerLineNumber = 0)
             where TException : Exception
@@ -93,22 +93,21 @@ namespace Plugins.ToolKits
         }
 
 
-        public static void Ignore<TException>(Action action, Action<TException> exceptionCallback = null)
-            where TException : Exception
+
+        public static void Throw<TException>(this TException exception, bool displayFilePath = false,
+           [CallerFilePath] string callerFilePath = null,
+           [CallerLineNumber] int callerLineNumber = 0)
+           where TException : Exception
         {
-            if (action is null)
+            if (exception is null)
             {
                 return;
             }
 
-            try
-            {
-                action();
-            }
-            catch (TException exception)
-            {
-                exceptionCallback?.Invoke(exception);
-            }
+            string throwExceptionMessage = FormatMessage(callerFilePath, callerLineNumber, displayFilePath);
+            throw new ThrowerException(throwExceptionMessage, exception);
         }
+
+
     }
 }

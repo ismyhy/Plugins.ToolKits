@@ -204,7 +204,7 @@ namespace Plugins.ToolKits.EasyHttp
             }
             Context.ToCollection().OfType<IDisposable>().ForEach(i =>
             {
-                Invoker.RunIgnore<Exception>(i.Dispose);
+                Invoker.Ignore<Exception>(i.Dispose);
             });
             Context.Clear();
         }
