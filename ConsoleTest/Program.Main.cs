@@ -1,5 +1,4 @@
-﻿using Plugins.ToolKits;
-using Plugins.ToolKits.Extensions;
+﻿using Plugins.ToolKits; 
 using Plugins.ToolKits.MVVM;
 using Plugins.ToolKits.Transmission;
 using Plugins.ToolKits.Validatement;
@@ -20,18 +19,33 @@ namespace ConsoleTest
 {
     internal partial class Program
     {
-        public class Test111 : IResettable
+        public class Test111  
         {
-            public void Reset()
+            Test1112 t2 = new Test1112();
+            public void Reset22()
             {
-                
+                t2.Reset();
             }
         }
 
-        
+
+        public class Test1112  
+        {
+            public void Reset([CallerMemberName] string name=null)
+            {
+                Console.WriteLine(name);
+            }
+        }
+
+
 
         private static void Main(string[] args)
         {
+
+            new Test111().Reset22();
+
+
+
             var CommandCounter = int.MaxValue;
             Interlocked.Increment(ref CommandCounter);
 

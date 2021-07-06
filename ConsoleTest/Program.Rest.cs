@@ -6,8 +6,7 @@ using System.Windows.Input;
 
 using Newtonsoft.Json;
 using Plugins.ToolKits;
-using Plugins.ToolKits.EasyHttp;
-using Plugins.ToolKits.Extensions;
+using Plugins.ToolKits.EasyHttp; 
 using Plugins.ToolKits.MVVM;
 
 namespace ConsoleTest
