@@ -1,39 +1,35 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Plugins.ToolKits.EventKits
 {
+    [DebuggerDisplay("Event Count: {easyEventsContainer.Count}")]
     public abstract class EasyEventBase : IDisposable
     {
-        private readonly IDictionary<EasyEventHandle, EasyEventInvoker> easyEventsContainer =
+        private readonly ConcurrentDictionary<EasyEventHandle, EasyEventInvoker> easyEventsContainer =
             new ConcurrentDictionary<EasyEventHandle, EasyEventInvoker>();
 
         public bool HasEvents => easyEventsContainer.Count > 0;
-
-        public int Count => easyEventsContainer.Count;
-
+         
         public void Dispose()
         {
             foreach (KeyValuePair<EasyEventHandle, EasyEventInvoker> item in easyEventsContainer)
             {
                 item.Key.Dispose();
             }
+            easyEventsContainer.Clear();
         }
 
         public Task DisposeAsync()
         {
-            return Task.Run(() => Dispose());
+            return Task.Factory.StartNew(() => Dispose(),CancellationToken.None,TaskCreationOptions.DenyChildAttach,TaskScheduler.Default);
         }
-
-        public override string ToString()
-        {
-            return $"Event Count: {Count} ";
-        }
-
+         
         internal void RunActions(Action<EasyEventInvoker> action)
         {
             if (action == null)
@@ -49,26 +45,17 @@ namespace Plugins.ToolKits.EventKits
 
         internal Task RunActionsAsync(Action<EasyEventInvoker> action)
         {
+            if (action == null)
+            {
+                return Task.Delay(0);
+            }
             return Task.Factory.StartNew(() =>
             {
-                if (action == null)
-                {
-                    return;
-                }
+                easyEventsContainer.AsParallel().ForAll(item => action?.Invoke(item.Value));
 
-                easyEventsContainer.AsParallel().ForAll(item => { action?.Invoke(item.Value); });
             }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
-
-        public void Dispose(EasyEventHandle easyEventHandle)
-        {
-            if (easyEventHandle == null)
-            {
-                throw new ArgumentException("Token is Error");
-            }
-
-            easyEventHandle.Dispose();
-        }
+ 
 
         protected EasyEventHandle InnerAdd(object action, object eventToken = null)
         {
@@ -84,11 +71,8 @@ namespace Plugins.ToolKits.EventKits
         }
 
         internal void RemoveEasyEvent(EasyEventInvoker easyEventInvoker)
-        {
-            if (easyEventsContainer.ContainsKey(easyEventInvoker.EasyEventHandle))
-            {
-                easyEventsContainer.Remove(easyEventInvoker.EasyEventHandle);
-            }
+        { 
+            easyEventsContainer.TryRemove(easyEventInvoker.EasyEventHandle, out var _);
         }
     }
 }

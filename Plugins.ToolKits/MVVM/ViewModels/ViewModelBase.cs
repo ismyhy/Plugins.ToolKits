@@ -18,11 +18,21 @@ namespace Plugins.ToolKits.MVVM
 
         public virtual void NotifyPropertyChanged(params string[] propertyNames)
         {
+            if(propertyNames is null|| propertyNames.Length == 0)
+            {
+                return;
+            }
+
             RaisePropertyListChanged(propertyNames);
         }
 
         public virtual Task NotifyPropertyChangedAsync(params string[] propertyNames)
         {
+            if (propertyNames is null || propertyNames.Length == 0)
+            {
+                return Task.Delay(0);
+            }
+
             return RaisePropertyListChangedAsync(propertyNames);
         }
 
@@ -82,7 +92,7 @@ namespace Plugins.ToolKits.MVVM
 
         public virtual void Dispose()
         {
-            PropertyInfoValues?.Clear();
+            PropertyValueMapper?.Clear();
         }
     }
 }

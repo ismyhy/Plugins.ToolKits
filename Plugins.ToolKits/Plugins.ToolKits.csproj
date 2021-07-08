@@ -12,9 +12,9 @@
 6. Simple EasyTcp
 7. Simple EasyTimer
 8. Simple RESTful</Description>
-		<Version>1.8.2.1</Version>
-		<AssemblyVersion>1.8.2.1</AssemblyVersion>
-		<FileVersion>1.8.2.1</FileVersion>
+		<Version>1.8.2.2</Version>
+		<AssemblyVersion>1.8.2.2</AssemblyVersion>
+		<FileVersion>1.8.2.2</FileVersion>
 		<Language>9.0</Language>
 		<PackageLicenseFile>Plugins.ToolKits.txt</PackageLicenseFile>
 		<Company>Hy</Company>
@@ -76,6 +76,7 @@
 		<UserSecretsId>caf78a21-ee97-4204-a03e-6904241ce800</UserSecretsId>
 		<NeutralLanguage></NeutralLanguage>
 		<ApplicationIcon>plugin.ico</ApplicationIcon>
+		<DelaySign>false</DelaySign>
 
 	</PropertyGroup>
 

@@ -33,24 +33,13 @@ namespace Plugins.ToolKits
         }
 
 
-        private readonly IDictionary<string, object> KeyObjects;
-        private readonly IDictionary<Type, object> TypeObjects;
+        private readonly ConcurrentDictionary<string, object> KeyObjects;
+        private readonly ConcurrentDictionary<Type, object> TypeObjects;
 
-        public ContextContainer() : this(false)
-        {
-        }
-
-        public ContextContainer(bool threadSafe)
-        {
-            if (threadSafe)
-            {
-                KeyObjects = new ConcurrentDictionary<string, object>();
-                TypeObjects = new ConcurrentDictionary<Type, object>();
-                return;
-            }
-
-            KeyObjects = new Dictionary<string, object>();
-            TypeObjects = new Dictionary<Type, object>();
+        public ContextContainer()
+        { 
+            KeyObjects = new ConcurrentDictionary<string, object>();
+            TypeObjects = new ConcurrentDictionary<Type, object>(); 
         }
 
 
@@ -142,15 +131,8 @@ namespace Plugins.ToolKits
                 throw new ArgumentNullException(nameof(instanceCreateFunc));
             }
 
-            if (KeyObjects.TryGetValue(uniqueKey, out object insValue) && insValue is TInstance value)
-            {
-                return value;
-            }
-
-            TInstance instValue = instanceCreateFunc.Invoke();
-
-            KeyObjects[uniqueKey] = instValue;
-
+             var instValue = (TInstance)KeyObjects.GetOrAdd(uniqueKey,i=> instanceCreateFunc.Invoke());
+ 
             return instValue;
         }
 
@@ -163,16 +145,10 @@ namespace Plugins.ToolKits
 
             Type uniqueKey = typeof(TInstance);
 
-            if (TypeObjects.TryGetValue(uniqueKey, out object insValue) && insValue is TInstance value)
-            {
-                return value;
-            }
-
-            TInstance instValue = instanceCreateFunc.Invoke();
-
-            TypeObjects[uniqueKey] = instValue;
+            var instValue = (TInstance)TypeObjects.GetOrAdd(uniqueKey, i => instanceCreateFunc.Invoke());
 
             return instValue;
+             
         }
 
         public Task<TInstance> TryGetAsync<TInstance>(string uniqueKey, Func<TInstance> instanceCreateFunc, CancellationToken token = default)
@@ -189,14 +165,7 @@ namespace Plugins.ToolKits
             CancellationToken token2 = token == default ? CancellationToken.None : token;
             return Task.Factory.StartNew(() =>
             {
-                if (KeyObjects.TryGetValue(uniqueKey, out object insValue) && insValue is TInstance value)
-                {
-                    return value;
-                }
-
-                TInstance instValue = instanceCreateFunc.Invoke();
-
-                KeyObjects[uniqueKey] = instValue;
+                var instValue = (TInstance)KeyObjects.GetOrAdd(uniqueKey, i => instanceCreateFunc.Invoke());
 
                 return instValue;
             }, token2, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
@@ -211,17 +180,8 @@ namespace Plugins.ToolKits
             CancellationToken token2 = token == default ? CancellationToken.None : token;
             return Task.Factory.StartNew(() =>
             {
-                Type uniqueKey = typeof(TInstance);
-
-                if (TypeObjects.TryGetValue(uniqueKey, out object insValue) && insValue is TInstance value)
-                {
-                    return value;
-                }
-
-                TInstance instValue = instanceCreateFunc.Invoke();
-
-                TypeObjects[uniqueKey] = instValue;
-
+                Type uniqueKey = typeof(TInstance); 
+                var instValue = (TInstance)TypeObjects.GetOrAdd(uniqueKey, i => instanceCreateFunc.Invoke()); 
                 return instValue;
             }, token2, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
@@ -232,7 +192,7 @@ namespace Plugins.ToolKits
             KeyObjects?.Clear();
         }
 
-        public ICollection<object> ToCollection()
+        internal ICollection<object> ToCollection()
         {
             var list = new List<object>();
             list.AddRange(TypeObjects.Values);
@@ -246,12 +206,12 @@ namespace Plugins.ToolKits
             KeyObjects?.Clear();
         }
 
-        public  string[] AllKey=> KeyObjects?.Select(x => x.Key).ToArray();
+        public string[] AllKey => KeyObjects?.Select(x => x.Key).ToArray();
 
 
         public bool RemoveKey(string key)
         {
-            return KeyObjects.TryRemove(key);
+            return KeyObjects.TryRemove(key,out var _);
         }
 
         public void CopyTo(ContextContainer other)

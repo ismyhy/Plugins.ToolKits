@@ -42,16 +42,19 @@ namespace Plugins.ToolKits
         }
 
 
-        public static void For(int startIndex, int endIndex, Action<int> action)
+        public static void For(int startIndex, int count, Action<int> action)
         {
-             
+            if (count <= 0)
+            {
+                throw new ArgumentException(nameof(count));
+            }
 
             if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
 
-            for (int i = startIndex; i < endIndex; i++)
+            for (int i = startIndex,j=startIndex+count; i < j; i++)
             {
                 action(i);
             }
@@ -59,14 +62,17 @@ namespace Plugins.ToolKits
         }
 
 
-        public static void For(int startIndex, int endIndex, Action action)
+        public static void For(int startIndex, int count, Action action)
         {
+            if (count <= 0)
+            {
+                throw new ArgumentException(nameof(count));
+            }
             if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
-
-            for (int i = startIndex; i < endIndex; i++)
+            for (int i = startIndex, j = startIndex + count; i < j; i++)
             {
                 action();
             }
@@ -74,11 +80,11 @@ namespace Plugins.ToolKits
         }
 
 
-        public static Task ForAsync(int startIndex, int endIndex, Action<int> action, CancellationToken token = default)
+        public static Task ForAsync(int startIndex, int count, Action<int> action, CancellationToken token = default)
         {
-            if (action is null)
+            if (count <= 0)
             {
-                throw new ArgumentNullException(nameof(action));
+                throw new ArgumentException(nameof(count));
             }
 
             if (action is null)
@@ -88,7 +94,7 @@ namespace Plugins.ToolKits
             CancellationToken token2 = token == default ? CancellationToken.None : token;
             return Task.Factory.StartNew(() =>
             {
-                for (int i = startIndex; i < endIndex; i++)
+                for (int i = startIndex, j = startIndex + count; i < j; i++)
                 {
                     if (token.IsCancellationRequested)
                     {
@@ -101,8 +107,13 @@ namespace Plugins.ToolKits
         }
 
 
-        public static Task ForAsync(int startIndex, int endIndex, Action action, CancellationToken token = default)
+        public static Task ForAsync(int startIndex, int count, Action action, CancellationToken token = default)
         {
+            if (count <= 0)
+            {
+                throw new ArgumentException(nameof(count));
+            }
+
             if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
@@ -110,7 +121,7 @@ namespace Plugins.ToolKits
             CancellationToken token2 = token == default ? CancellationToken.None : token;
             return Task.Factory.StartNew(() =>
             {
-                for (int i = startIndex; i < endIndex; i++)
+                for (int i = startIndex, j = startIndex + count; i < j; i++)
                 {
                     if (token.IsCancellationRequested)
                     {
@@ -135,13 +146,8 @@ namespace Plugins.ToolKits
             CancellationToken token2 = token == default ? CancellationToken.None : token;
             return Task.Factory.StartNew(() =>
             {
-                while (loopCondition.Invoke())
-                {
-                    if (token.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
+                while (loopCondition.Invoke() && !token.IsCancellationRequested)
+                {  
                     action();
                 }
             }, token2, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
